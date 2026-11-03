@@ -1,0 +1,248 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>CNIQ — Intelligent Navigation</title>
+  <meta name="description" content="Compass Nexus iQ: a scroll-driven drive in five side-view scenes, five overhead scenes and a 3D camera study of the same white MPV.">
+  <meta name="theme-color" content="#f5f5f3">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500&family=Manrope:wght@600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./styles.css">
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js",
+        "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/"
+      },
+      "integrity": {
+        "https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js": "sha384-GY5FqjttLCFRt/McQbyaVdCk2O1IQtOeX8Py6NfD89BIAsIyJFRl4UgSXrk2vXAk",
+        "https://cdn.jsdelivr.net/npm/three@0.170.0/examples/jsm/environments/RoomEnvironment.js": "sha384-9ItPPH2vgKbkvgrqTKq7ptGYe+WuAnqlZtlqleJW4/CJjnM5R7C+efD6iS7ADPJ9"
+      }
+    }
+  </script>
+</head>
+<body>
+  <!-- paper: premium white field with faint blueprint grid patches -->
+  <div class="paper" aria-hidden="true">
+    <i class="grid grid-a"></i><i class="grid grid-b"></i><i class="grid grid-c"></i>
+  </div>
+
+  <!-- behind the road: oversized ghost type that the road and the vehicle cover -->
+  <div class="back" aria-hidden="true">
+    <div class="ghost" id="ghost">INTELLIGENT NAVIGATION</div>
+  </div>
+
+  <canvas id="stage" aria-hidden="true"></canvas>
+
+  <!-- HUD -->
+  <div class="hud" aria-hidden="true">
+    <div class="hud-speed"><span id="speed">00</span> KM/H</div>
+    <div class="hud-scene">
+      <div><span id="sceneNo">01</span> / <span id="sceneOf">10</span> · <span id="sceneName">SIDE ELEVATION</span></div>
+      <div class="hud-lens" id="lens">LENS 152MM · TILT 00°</div>
+    </div>
+    <div class="hud-rail"><i id="railFill"></i></div>
+    <div class="hud-compass">
+      <svg viewBox="0 0 64 64" width="56" height="56">
+        <circle cx="32" cy="32" r="27" fill="none" stroke="currentColor" stroke-width="1"/>
+        <path d="M32 3v6M32 55v6M3 32h6M55 32h6" stroke="currentColor" stroke-width="1"/>
+        <text x="32" y="18" text-anchor="middle" font-size="7" fill="currentColor" font-family="JetBrains Mono, monospace">N</text>
+        <g id="needle"><path d="M44 32 26 26.5 29.5 32 26 37.5Z" fill="currentColor"/></g>
+      </svg>
+    </div>
+  </div>
+
+  <main class="story" id="story">
+    <!-- ===================== 01 · SIDE ===================== -->
+    <section class="scene s1" aria-labelledby="h1">
+      <div class="brand">
+        <strong>CNIQ</strong>
+        <span>NAVIGATE INTELLIGENCE</span>
+        <i class="rule"></i>
+      </div>
+      <h1 id="h1" class="display">Pure electric.<br>Precisely designed.</h1>
+      <div class="on-road s1-foot">
+        <p>Compass Nexus iQ — employee transportation for IT campuses, corporate offices, industrial sites and ports. Thiruvananthapuram, Kerala.</p>
+        <span class="cue">Scroll to drive <i></i></span>
+      </div>
+    </section>
+
+    <!-- ===================== 02 · SIDE ===================== -->
+    <section class="scene s2 on-road" aria-labelledby="h2">
+      <p class="eyebrow r">01 — The platform</p>
+      <h2 id="h2" class="title r">One platform<br><span class="dim">for every kilometre.</span></h2>
+      <p class="lede r">Booking, vehicles, drivers, live trips, verification and invoicing run on one connected system, so every journey your people take is planned, tracked and accounted for.</p>
+    </section>
+
+    <!-- ===================== 03 · SIDE ===================== -->
+    <section class="scene s3 on-road" aria-labelledby="h3">
+      <p class="eyebrow r">02 — The promise</p>
+      <h2 id="h3" class="title r">Safe. Reliable.<br><span class="dim">On every shift.</span></h2>
+      <p class="lede r">Trained drivers, inspected vehicles and real-time visibility, managed by a team that answers for every trip.</p>
+    </section>
+
+    <!-- ===================== 04 · SIDE ===================== -->
+    <section class="scene s4 on-road" aria-labelledby="h4">
+      <p class="eyebrow r" id="h4">03 — Services</p>
+      <div class="cards r" id="cards">
+        <article class="card">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="8" cy="7" r="3"/><circle cx="16.5" cy="8" r="2.5"/><path d="M2.5 20c0-3.6 2.5-6 5.5-6s5.5 2.4 5.5 6M13.5 14.6c.9-.4 1.9-.6 3-.6 2.6 0 5 2 5 5.5"/></svg>
+          <h3>Employee transport</h3>
+          <p>Shift-based pickups and drops for campuses, rostered and tracked end to end.</p>
+        </article>
+        <article class="card">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.5 4 5.5v6c0 5 3.4 8.6 8 10 4.6-1.4 8-5 8-10v-6z"/><path d="M14.5 9a3.5 3.5 0 1 0 0 5 3 3 0 1 1 0-5z"/></svg>
+          <h3>Night-shift safety</h3>
+          <p>Verified drivers, live tracking and SOS support for late and early shifts.</p>
+        </article>
+        <article class="card">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="1.5"/><path d="M3 10h18M8 3v4M16 3v4M8 14h3M8 17h6"/></svg>
+          <h3>Corporate events</h3>
+          <p>Coordinated fleets for offsites, client visits and large-group movements.</p>
+        </article>
+        <article class="card">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2.5 15.5V12l2.5-4.5h9.5l4 4 3 .8v3.2"/><circle cx="7" cy="16" r="2"/><circle cx="17" cy="16" r="2"/><path d="M9 16h6M2.5 15.5H5M19 15.5h2.5"/></svg>
+          <h3>Dedicated fleet</h3>
+          <p>Vehicles and drivers deployed to your site on contract, with inspections on record.</p>
+        </article>
+      </div>
+    </section>
+
+    <!-- ===================== 05 · SIDE ===================== -->
+    <section class="scene s5 on-road" aria-labelledby="h5">
+      <p class="eyebrow r">04 — Built for</p>
+      <h2 id="h5" class="sectors r">
+        <span>IT campuses</span><i>/</i><span>Corporate offices</span><i>/</i><span>Industrial sites</span><i>/</i><span>Ports</span>
+      </h2>
+      <p class="lede r">Direct agreements and partner operations, run from one command centre.</p>
+    </section>
+
+    <!-- ===================== 06 · OVERHEAD ===================== -->
+    <section class="scene s6" aria-labelledby="h6">
+      <p class="eyebrow r">05 — Live operations</p>
+      <h2 id="h6" class="title r">Every vehicle.<br><span class="dim">In view.</span></h2>
+      <p class="lede r">GPS, trip status and driver assignment stream into one command centre, from scheduled to completed.</p>
+    </section>
+    <div class="live-tag" id="liveTag" aria-hidden="true"><i></i>LIVE · GPS</div>
+
+    <!-- ===================== 07 · OVERHEAD ===================== -->
+    <section class="scene s7" aria-labelledby="h7">
+      <p class="eyebrow r">06 — Routing</p>
+      <h2 id="h7" class="title r">Every turn,<br><span class="dim">accounted for.</span></h2>
+      <p class="lede r">Routes, rosters and shifts are planned together, so pickups land on time and the kilometres on every trip stay honest.</p>
+    </section>
+
+    <!-- ===================== 08 · OVERHEAD ===================== -->
+    <section class="scene s8 col" aria-labelledby="h8">
+      <p class="eyebrow r">07 — Reliability</p>
+      <h2 id="h8" class="title r"><span class="dim">Reliability</span><br>at every<br>milestone</h2>
+      <ul class="feat r">
+        <li>Real-time<br>tracking</li><li aria-hidden="true">/</li>
+        <li>Optimized<br>routing</li><li aria-hidden="true">/</li>
+        <li>Service-wide<br>data</li>
+      </ul>
+    </section>
+
+    <!-- ===================== 09 · OVERHEAD ===================== -->
+    <section class="scene s9 col" aria-label="Airport and intercity services">
+      <article class="svc r">
+        <svg class="hex" viewBox="0 0 48 48" aria-hidden="true"><path d="M24 3 42 13.5v21L24 45 6 34.5v-21z"/><path d="M14 24h20M30.5 24l-3-1.2M17 24l-2.4-3.4M17 24l-2.4 3.4M24 24l3.8-7M24 24l3.8 7"/></svg>
+        <h3>Airport<br>transfers</h3>
+        <p>Seamless, punctual, and all-electric journeys to and from the airport.</p>
+      </article>
+      <article class="svc r">
+        <svg class="pins" viewBox="0 0 48 48" aria-hidden="true"><path d="M11 33s-6-6.2-6-10.5a6 6 0 1 1 12 0C17 26.8 11 33 11 33z"/><circle cx="11" cy="22.5" r="2"/><path d="M36 24s-6-6.2-6-10.5a6 6 0 1 1 12 0C42 17.8 36 24 36 24z"/><circle cx="36" cy="13.5" r="2"/><path d="M11 37c7 5 13-2 18-6s8-2 7-7" stroke-dasharray="2 3"/></svg>
+        <h3>Intercity<br>travel</h3>
+        <p>Comfortable, efficient, and sustainable travel between key cities.</p>
+      </article>
+    </section>
+
+    <!-- ===================== 10 · OVERHEAD ===================== -->
+    <section class="scene s10 col" aria-labelledby="h10">
+      <p class="eyebrow r">08 — Verified</p>
+      <h2 id="h10" class="title r">From booking<br><span class="dim">to verified invoice.</span></h2>
+      <p class="lede r">Every trip is confirmed, verified and locked before it is billed, and every invoice links back to the trips behind it.</p>
+      <ol class="chain r">
+        <li>Booking</li><li>Trip</li><li>Verification</li><li>Invoice</li><li>Payment</li>
+      </ol>
+    </section>
+
+    <!-- milestones pinned to the road (positions are projected from 3D each frame) -->
+    <ol class="milestones" id="milestones" aria-label="Trip milestones">
+      <li data-z="58"><b>01</b><span>Booking confirmed</span></li>
+      <li data-z="75"><b>02</b><span>Vehicle &amp; driver assigned</span></li>
+      <li data-z="92"><b>03</b><span>Passenger picked up</span></li>
+      <li data-z="109"><b>04</b><span>Trip completed</span></li>
+      <li data-z="126"><b>05</b><span>Trip verified</span></li>
+      <li data-z="143"><b>06</b><span>Invoice generated</span></li>
+    </ol>
+
+    <!-- ===================== CAMERA STUDY · 3D ===================== -->
+    <section class="scene c1 study" aria-labelledby="hc1">
+      <div class="panel">
+      <p class="eyebrow r">Camera study · same vehicle in 3D</p>
+      <h2 id="hc1" class="title r">One vehicle.<br><span class="dim">Every angle.</span></h2>
+      <p class="lede r">The same white MPV, now under a free camera: a crane down, a 180° arc, a low-angle hero and a dolly to the wheel.</p>
+      </div>
+    </section>
+
+    <section class="scene c2 study" aria-labelledby="hc2">
+      <div class="panel">
+      <p class="eyebrow r">Vehicle quality profile</p>
+      <h2 id="hc2" class="title r">Inspected,<br><span class="dim">not assumed.</span></h2>
+      <ul class="checks r">
+        <li><b>Documents</b>Insurance, fitness, permit and PUC validity, tracked with expiry alerts.</li>
+        <li><b>Condition</b>Tyres, AC, interior, exterior and cleanliness, inspected on schedule.</li>
+        <li><b>Safety</b>First-aid kit, fire extinguisher and GPS status, checked on every inspection.</li>
+      </ul>
+      <p class="note r">Scored only against the inspection criteria your administrators configure.</p>
+      </div>
+    </section>
+
+    <section class="scene c3 study" aria-labelledby="hc3">
+      <div class="panel">
+      <p class="eyebrow r">Low-angle hero</p>
+      <h2 id="hc3" class="title r">Pure electric.<br><span class="dim">Precisely designed.</span></h2>
+      <p class="lede r">Quiet cabins and zero tailpipe emissions on every route your people ride.</p>
+      </div>
+    </section>
+
+    <section class="scene c4 study" aria-labelledby="hc4">
+      <div class="panel">
+      <p class="eyebrow r">Detail</p>
+      <h2 id="hc4" class="title r">Down to<br><span class="dim">the tyre.</span></h2>
+      <p class="lede r">Service history and tyre condition live on every vehicle's record.</p>
+      </div>
+    </section>
+
+    <section class="scene c5 study" aria-labelledby="hc5">
+      <div class="panel">
+      <p class="eyebrow r">Compass Nexus iQ</p>
+      <h2 id="hc5" class="title r">Plan your fleet<br><span class="dim">with CNIQ.</span></h2>
+      <div class="cta r">
+        <a href="mailto:navigation@compassnai.com">navigation@compassnai.com</a>
+        <a href="https://www.compassnai.com" rel="noopener">www.compassnai.com</a>
+      </div>
+      <p class="fine r">Compass Travel &amp; Transportation · Thiruvananthapuram, Kerala</p>
+      </div>
+    </section>
+  </main>
+
+  <div class="shot" id="shot" aria-hidden="true">
+    <span id="shotNo">SHOT 01</span>
+    <strong id="shotName">CRANE DOWN</strong>
+  </div>
+
+  <div id="track" aria-hidden="true"></div>
+
+  <noscript>
+    <p class="noscript">This experience needs JavaScript for the scroll-driven camera. Compass Nexus iQ — intelligent employee transportation. navigation@compassnai.com</p>
+  </noscript>
+
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js" integrity="sha384-g4NTh/Iv5PPU4xPyhEWqPcwtNXOvdaDI8LLnyYfyNZOjKJeYQyjzQ9X5275eBjpt" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/ScrollTrigger.min.js" integrity="sha384-Z3REaz79l2IaAZqJsSABtTbhjgOUYyV3p90XNnAPCSHg3EMTz1fouunq9WZRtj3d" crossorigin="anonymous"></script>
+  <script type="module" src="./main.js"></script>
+</body>
+</html>

@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [Unreleased]
+
+### Added
+
+- **3D Camera Moves** (`references/data/camera-shots-50.md`, entries 56-65): WebGL camera grammar for scroll-driven 3D subjects, covering planimetric elevation, lens-shift reframe, crane-up to plan with a dolly-zoom breath, god's-eye tracking, locked-off drive-through, crane down, arc, low-angle hero, dolly to detail and pull-back
+- **Demo `demos/cniq-mpv-scroll`**: CNIQ scroll drive built with GSAP + Three.js. One procedural premium-trim white MPV runs across 5 side-elevation scenes, 5 plan-view scenes and a 3D camera study, and ships with `decisions.md`, `storyboard.md` and `compiled-spec.md`
+
 ## [1.0.0] - 2026-04-02
 
 ### Added
