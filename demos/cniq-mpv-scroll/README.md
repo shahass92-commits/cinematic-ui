@@ -54,7 +54,7 @@ DOM positions such as the road top, road edges, milestones, the live tag and the
 
 ## The vehicle
 
-`vehicle.js` builds a white MPV from lofted superellipse sections that follow the side profile of the reference poster. All paint, glass and trim zones are resolved per fragment in object space, so edges stay crisp at any zoom without textures. The premium trim includes:
+`vehicle.js` builds a white MPV/wagon from lofted superellipse sections. The side profile, axle positions, beltline, door shut-lines, lamp placement and spoiler are measured from the user's side-view reference photo and scaled to 4.72 m (short sloping bonnet, long raked windscreen, roof spoiler over a raked tailgate, hinged rear doors). All paint, glass and trim zones are resolved per fragment in object space, so edges stay crisp at any zoom without textures. The premium trim includes:
 
 - Pearl-white paint with a deep clearcoat and a faint thin-film flop, applied to painted surfaces only.
 - Matrix projector lamps, an L-shaped DRL signature, and a full-width LED light blade front and rear.

@@ -6,10 +6,10 @@ import * as THREE from 'three';
 export const SPEC = {
   length: 4.72,
   width: 1.82,
-  height: 1.645,
+  height: 1.745,
   frontAxle: 1.46,
-  rearAxle: -1.38,
-  wheelRadius: 0.335,
+  rearAxle: -1.43,
+  wheelRadius: 0.35,
   wheelWidth: 0.235,
   track: 0.8, // wheel centre offset from the centre line
 };
@@ -18,16 +18,21 @@ const HALF_L = SPEC.length / 2;
 const HALF_W = SPEC.width / 2;
 
 // Side profile (x, y), front to rear. Top line and bottom line are sampled separately.
+// Measured from the side-view reference: short sloping bonnet, long raked screen,
+// roof spoiler over a raked tailgate. (x, y) in metres, front to rear.
 const TOP = [
-  [2.36, 0.62], [2.355, 0.8], [2.33, 0.9], [2.27, 0.965], [2.1, 1.0], [1.8, 1.06],
-  [1.5, 1.112], [1.32, 1.145], [1.1, 1.25], [0.85, 1.37], [0.6, 1.49], [0.4, 1.572],
-  [0.25, 1.612], [0.0, 1.634], [-1.0, 1.645], [-1.8, 1.64], [-2.05, 1.618], [-2.13, 1.588],
-  [-2.18, 1.5], [-2.25, 1.3], [-2.31, 1.12], [-2.345, 0.95], [-2.36, 0.76],
+  [2.36, 0.56], [2.354, 0.644], [2.343, 0.676], [2.313, 0.816], [2.246, 0.9], [2.188, 0.942],
+  [2.071, 1.006], [1.955, 1.052], [1.838, 1.09], [1.722, 1.122], [1.605, 1.146], [1.488, 1.163],
+  [1.372, 1.184], [1.313, 1.2], [1.197, 1.265], [1.08, 1.33], [0.905, 1.42], [0.789, 1.475],
+  [0.672, 1.525], [0.555, 1.569], [0.439, 1.609], [0.322, 1.641], [0.205, 1.671], [0.089, 1.703],
+  [-0.144, 1.728], [-0.436, 1.738], [-0.845, 1.738], [-1.19, 1.728], [-1.43, 1.718], [-1.54, 1.708],
+  [-1.7, 1.697], [-1.894, 1.673], [-2.01, 1.659], [-2.069, 1.645], [-2.1, 1.52], [-2.127, 1.394],
+  [-2.185, 1.344], [-2.24, 1.245], [-2.3, 1.16], [-2.335, 0.95], [-2.36, 0.7],
 ];
 const BOTTOM = [
-  [2.36, 0.58], [2.35, 0.4], [2.33, 0.27], [2.25, 0.225], [2.0, 0.21], [1.6, 0.19],
-  [1.0, 0.168], [-1.0, 0.168], [-1.6, 0.19], [-2.05, 0.24], [-2.28, 0.28], [-2.34, 0.37],
-  [-2.36, 0.72],
+  [2.36, 0.52], [2.354, 0.484], [2.343, 0.4], [2.313, 0.312], [2.25, 0.29], [2.1, 0.255],
+  [1.95, 0.235], [1.8, 0.24], [1.0, 0.24], [-1.0, 0.24], [-1.75, 0.31], [-2.0, 0.32],
+  [-2.18, 0.344], [-2.24, 0.37], [-2.3, 0.4], [-2.34, 0.55], [-2.36, 0.66],
 ];
 
 function profileSampler(points) {
@@ -78,7 +83,7 @@ function planHalf(x) {
   return HALF_W * Math.pow(Math.max(0, 1 - Math.pow(t, p)), 1 / p);
 }
 
-const BELT = 1.1;
+const BELT = 1.15;
 function widthFactor(y, yb, yt) {
   const tb = smooth(BELT - 0.02, Math.max(yt, BELT + 0.12), y);
   const tumble = 1 - 0.19 * tb * tb;
@@ -180,101 +185,112 @@ const ZONE_MAIN = /* glsl */ `
   float czYt = vRing.x;
   float czHm = vRing.z;
   float czSide = smoothstep(0.35, 0.65, abs(czN.z));
-  // beltline: 1.10 at the A-pillar, 1.15 mid-cabin, kicking up to 1.19 at the rear quarter
-  float czBelt = 1.1 + 0.05 * smoothstep(0.8, -0.2, czP.x) + 0.04 * smoothstep(-1.55, -1.95, czP.x);
-  float czWinTop = czYt - 0.075;
+  // beltline rises from 1.13 m at the A-pillar to 1.26 m, then kicks up at the rear quarter
+  float czBelt = 1.13 + 0.054 * clamp(1.1 - czP.x, 0.0, 2.5) + 0.03 * smoothstep(-1.5, -1.8, czP.x);
+  float czWinTop = czYt - 0.115; // leaves a white roof strip above the satin DLO line
 
-  float czSideBand = czAA(czBelt, czP.y) * (1.0 - czAA(czWinTop, czP.y)) * czAA(-2.15, czP.x) * (1.0 - czAA(0.36, czP.x));
-  float czScreen = czAA(0.36, czP.x) * (1.0 - czAA(1.3, czP.x)) * czAA(czBelt, czP.y);
-  float czRearGlass = (1.0 - czAA(-0.45, czN.x)) * czBand(czP.y, 1.16, 1.555) * (1.0 - czAA(czHm * 0.8, czX));
+  float czSideBand = czAA(czBelt, czP.y) * (1.0 - czAA(czWinTop, czP.y)) * czAA(-2.15, czP.x) * (1.0 - czAA(0.12, czP.x));
+  float czScreen = czAA(0.12, czP.x) * (1.0 - czAA(1.365, czP.x)) * czAA(czBelt, czP.y);
+  float czRearGlass = (1.0 - czAA(-0.45, czN.x)) * czBand(czP.y, 1.25, 1.6) * (1.0 - czAA(0.62, czX)) * (1.0 - czAA(-2.04, czP.x));
   float czGlass = max(max(czSideBand, czScreen), czRearGlass);
 
-  // panes inside the black band (pillars and frames stay jet black)
-  float czPane = czBand(czP.y, czBelt + 0.022, czWinTop - 0.03) * czSide * (
-      czBand(czP.x, 0.07, 0.86 - (czP.y - 1.1) * 1.5) +
-      czBand(czP.x, -1.02, -0.11) +
-      czBand(czP.x, -1.93 + (czP.y - 1.2) * 0.35, -1.1));
+  // panes: front door, rear door, rear quarter (pillars stay piano black)
+  float czPane = czBand(czP.y, czBelt + 0.02, czWinTop - 0.028) * czSide * (
+      czBand(czP.x, -0.07, 1.12 - (czP.y - 1.13) * 1.35) +
+      czBand(czP.x, -1.3, -0.14) +
+      czBand(czP.x, -1.93 + (czP.y - 1.29) * 0.6, -1.37));
 
-  float czClad = max(1.0 - czAA(0.29, czP.y), 1.0 - czAA(-0.4, czN.y));
-  float czZn = czX / max(czHm, 0.05); // 0 at the centre line, 1 at the body side (valid away from nose/tail tips)
+  float czClad = (1.0 - czAA(-0.75, czN.y)) * (1.0 - czAA(0.3, czP.y)); // underside only: the skirt stays body colour
+  float czZn = czX / max(czHm, 0.05);
 
   // ================= PREMIUM TRIM =================
-  // ---- front fascia: matrix lamps with L-shaped DRL, full-width light blade over a satin bar,
-  //      diamond-mesh grille, satin-bladed corner intakes, brushed lip, flush parking sensors
+  // ---- front fascia: swept matrix lamps (wrapping onto the fender), L-signature DRL, full-width
+  //      light blade over a satin bar, corner intakes, diamond-mesh grille, brushed lip
   float czFront = czAA(0.3, czN.x) * czAA(1.95, czP.x);
-  float czLampY = czP.y - 0.05 * smoothstep(0.4, 0.86, czX);
-  float czLamp = czAA(2.02, czP.x) * czBand(czLampY, 0.84, 0.905) * czAA(0.4, czX) * czAA(-0.1, czN.x);
-  float czDrl = czLamp * czBand(czLampY, 0.889, 0.902);
-  czDrl = max(czDrl, czAA(2.02, czP.x) * czAA(-0.1, czN.x) * czBand(czX, 0.703, 0.722) * czBand(czLampY, 0.80, 0.902));
-  float czProj = czLamp * czBand(czLampY, 0.852, 0.877) * czBand(fract((czX - 0.38) * 22.0), 0.2, 0.6) * (1.0 - czAA(0.69, czX));
-  float czBar = czFront * czBand(czP.y, 0.864, 0.882) * (1.0 - czAA(0.42, czX));
-  float czSlot = czFront * czBand(czP.y, 0.884, 0.912) * (1.0 - czAA(0.42, czX));
-  float czBlade = czFront * czBand(czP.y, 0.894, 0.901) * (1.0 - czAA(0.41, czX));
-  float czFangC = 0.68 + (czP.y - 0.38) * 0.3;
-  float czFang = czFront * czBand(czP.y, 0.38, 0.63) * czBand(czX, czFangC - 0.05, czFangC + 0.045);
-  float czFangBlade = czFang * czBand(czX, czFangC - 0.009, czFangC + 0.004) * czBand(czP.y, 0.41, 0.6);
-  float czGrille = czFront * czBand(czP.y, 0.29, 0.395) * (1.0 - czAA(0.58, czX));
+  float czLampY = czP.y - 0.06 * smoothstep(0.45, 0.85, czX);
+  float czLampF = czAA(2.02, czP.x) * czBand(czLampY, 0.785, 0.85) * czAA(0.45, czX) * czAA(-0.1, czN.x);
+  float czSweep = clamp(2.3 - czP.x, 0.0, 1.0);
+  float czLampS = czSide * czBand(czP.x, 1.74, 2.34) * czBand(czP.y, 0.83 + czSweep * 0.175, 0.955 + czSweep * 0.02);
+  float czLamp = max(czLampF, czLampS);
+  float czDrl = czLampF * czBand(czLampY, 0.838, 0.85);
+  czDrl = max(czDrl, czLampS * czBand(czP.y, 0.938 + czSweep * 0.02, 0.952 + czSweep * 0.02));
+  float czProjS = czLampS * czBand(czP.y, 0.86 + czSweep * 0.1, 0.905 + czSweep * 0.05) * czBand(fract(czP.x * 18.0), 0.25, 0.6) * czAA(2.02, czP.x);
+  czDrl = max(czDrl, czAA(2.02, czP.x) * czAA(-0.1, czN.x) * czBand(czX, 0.703, 0.722) * czBand(czLampY, 0.75, 0.85));
+  float czProj = czLampF * czBand(czLampY, 0.8, 0.828) * czBand(fract((czX - 0.45) * 22.0), 0.2, 0.6) * (1.0 - czAA(0.69, czX));
+  float czBar = czFront * czBand(czP.y, 0.752, 0.768) * (1.0 - czAA(0.45, czX));
+  float czSlot = czFront * czBand(czP.y, 0.77, 0.796) * (1.0 - czAA(0.45, czX));
+  float czBlade = czFront * czBand(czP.y, 0.779, 0.786) * (1.0 - czAA(0.44, czX));
+  float czFangC = 0.66 + (czP.y - 0.33) * 0.3;
+  float czFang = czFront * czBand(czP.y, 0.33, 0.62) * czBand(czX, czFangC - 0.05, czFangC + 0.045);
+  float czFangBlade = czFang * czBand(czX, czFangC - 0.009, czFangC + 0.004) * czBand(czP.y, 0.36, 0.59);
+  float czGrille = czFront * czBand(czP.y, 0.24, 0.35) * (1.0 - czAA(0.58, czX));
   vec2 czMesh = vec2(czP.y + czX, czP.y - czX) * 34.0;
   float czMeshL = czGrille * (1.0 - smoothstep(0.06, 0.14, min(abs(fract(czMesh.x) - 0.5), abs(fract(czMesh.y) - 0.5))));
-  float czGrilleRim = czFront * (czBand(czP.y, 0.283, 0.29) + czBand(czP.y, 0.395, 0.401)) * (1.0 - czAA(0.58, czX));
-  float czPlateF = czFront * czBand(czP.y, 0.43, 0.535) * (1.0 - czAA(0.25, czX));
-  float czLip = czFront * czBand(czP.y, 0.236, 0.262) * (1.0 - czAA(0.78, czX));
-  float czFrontLow = czFront * (1.0 - czAA(0.236, czP.y));
-  float czSensor = czFront * (1.0 - czAA(0.011, min(length(vec2(czX - 0.33, czP.y - 0.575)), length(vec2(czX - 0.52, czP.y - 0.575)))));
-  float czHood = czAA(0.6, czN.y) * czBand(czP.x, 1.4, 2.22) * exp(-pow((czX - 0.43) / 0.018, 2.0));
+  float czGrilleRim = czFront * (czBand(czP.y, 0.234, 0.24) + czBand(czP.y, 0.35, 0.356)) * (1.0 - czAA(0.58, czX));
+  float czPlateF = czFront * czBand(czP.y, 0.37, 0.5) * (1.0 - czAA(0.25, czX));
+  float czLip = czFront * czBand(czP.y, 0.2, 0.232) * (1.0 - czAA(0.78, czX));
+  float czFrontLow = czFront * (1.0 - czAA(0.2, czP.y));
+  float czSensor = czFront * (1.0 - czAA(0.011, min(length(vec2(czX - 0.33, czP.y - 0.56)), length(vec2(czX - 0.52, czP.y - 0.56)))));
+  float czHood = czAA(0.6, czN.y) * czBand(czP.x, 1.45, 2.2) * exp(-pow((czX - 0.43) / 0.018, 2.0));
 
-  // ---- rear: L-lamps joined by a full-width red light blade, satin garnish, finned diffuser,
-  //      piano-black spoiler lip, high stop lamp
+  // ---- rear: tail lamps wrapping 0.4 m onto the flank, joined by a full-width red blade
   float czRear = (1.0 - czAA(-0.3, czN.x)) * (1.0 - czAA(-2.05, czP.x));
-  float czTail = czBand(czP.y, 0.965, 1.055) * (1.0 - czAA(-2.0, czP.x)) * czAA(0.46, czX);
-  czTail = max(czTail, czRear * czBand(czP.y, 0.9, 1.055) * czAA(0.72, czX));
-  float czTailLine = czTail * (czBand(czP.y, 0.99, 0.997) + czBand(czP.y, 1.012, 1.018) + czBand(czP.y, 1.034, 1.04));
-  float czBladeR = czRear * czBand(czP.y, 1.009, 1.017) * (1.0 - czAA(0.47, czX));
-  float czBarR = czRear * czBand(czP.y, 0.984, 0.998) * (1.0 - czAA(0.46, czX));
-  float czBladeHousing = czRear * czBand(czP.y, 0.999, 1.027) * (1.0 - czAA(0.47, czX));
-  float czStop = czRear * czBand(czP.y, 1.528, 1.542) * (1.0 - czAA(0.26, czX));
-  float czGate = czRear * (czLine(czX, 0.6, 0.0035) * czBand(czP.y, 0.6, 1.16) + czLine(czP.y, 0.6, 0.0025) * (1.0 - czAA(0.6, czX)));
-  float czReflector = czRear * czBand(czP.y, 0.47, 0.492) * czBand(czX, 0.45, 0.76);
-  float czRearLow = czRear * (1.0 - czAA(0.4, czP.y));
-  float czDiffuser = czRear * czBand(czP.y, 0.255, 0.315) * (1.0 - czAA(0.64, czX));
-  float czFins = czDiffuser * czBand(fract(czX * 11.0), 0.0, 0.16) * czBand(czP.y, 0.255, 0.3);
-  float czSpoiler = czAA(0.25, czN.y) * (1.0 - czAA(-2.0, czP.x)) * czAA(czYt - 0.03, czP.y);
+  float czRun = clamp(czP.x + 2.29, 0.0, 0.4);
+  float czTailS = czSide * (1.0 - czAA(-1.9, czP.x)) * czBand(czP.y, 1.06 + czRun * 0.23, 1.19 - czRun * 0.03);
+  float czTailR = czRear * czBand(czP.y, 1.01, 1.18) * czAA(0.55, czX);
+  czTailR = max(czTailR, czRear * czBand(czP.y, 0.95, 1.18) * czAA(0.76, czX));
+  float czTail = max(czTailS, czTailR);
+  float czTailLine = czTail * (czBand(czP.y, 1.075, 1.082) + czBand(czP.y, 1.115, 1.122) + czBand(czP.y, 1.153, 1.16));
+  float czBladeR = czRear * czBand(czP.y, 1.106, 1.116) * (1.0 - czAA(0.56, czX));
+  float czBarR = czRear * czBand(czP.y, 1.084, 1.1) * (1.0 - czAA(0.55, czX));
+  float czBladeHousing = czRear * czBand(czP.y, 1.1, 1.124) * (1.0 - czAA(0.56, czX));
+  float czStop = czRear * czBand(czP.y, 1.585, 1.598) * (1.0 - czAA(0.26, czX));
+  float czGate = czRear * (czLine(czX, 0.66, 0.0035) * czBand(czP.y, 0.67, 1.25) + czLine(czP.y, 0.67, 0.0025) * (1.0 - czAA(0.66, czX)));
+  float czReflector = czRear * czBand(czP.y, 0.53, 0.555) * czBand(czX, 0.45, 0.78);
+  czReflector = max(czReflector, czSide * (1.0 - czAA(-2.18, czP.x)) * czBand(czP.y, 0.46, 0.485));
+  float czRearLow = czRear * (1.0 - czAA(0.42, czP.y));
+  float czDiffuser = czRear * czBand(czP.y, 0.29, 0.37) * (1.0 - czAA(0.64, czX));
+  float czFins = czDiffuser * czBand(fract(czX * 11.0), 0.0, 0.16) * czBand(czP.y, 0.29, 0.355);
 
   // ---- glass, pillars and roof
-  float czRoof = czAA(0.7, czN.y) * czBand(czP.x, -1.78, 0.4) * (1.0 - czAA(0.64, czZn));
-  float czRoofFrame = czAA(0.7, czN.y) * czBand(czP.x, -1.8, 0.42) * czBand(czZn, 0.64, 0.665);
+  float czRoof = czAA(0.7, czN.y) * czBand(czP.x, -1.6, 0.18) * (1.0 - czAA(0.64, czZn));
+  float czRoofFrame = czAA(0.7, czN.y) * czBand(czP.x, -1.62, 0.2) * czBand(czZn, 0.64, 0.665);
   czGlass = max(czGlass, czRoof);
   float czPillar = czSideBand * (1.0 - clamp(czPane, 0.0, 1.0)) * czSide;
   float czPrivacy = 1.0 - czAA(-0.11, czP.x);
   float czSky = smoothstep(czBelt, czWinTop, czP.y);
 
   float czArch = 0.0;
-  czArch = max(czArch, 1.0 - czAA(0.392, length(vec2(czP.x - 1.46, czP.y - 0.335))));
-  czArch = max(czArch, 1.0 - czAA(0.392, length(vec2(czP.x + 1.38, czP.y - 0.335))));
+  czArch = max(czArch, 1.0 - czAA(0.405, length(vec2(czP.x - 1.46, czP.y - 0.35))));
+  czArch = max(czArch, 1.0 - czAA(0.405, length(vec2(czP.x + 1.43, czP.y - 0.35))));
   czArch *= czAA(0.55, czX);
 
-  // ---- flush detailing: shut lines, flush handles, charge flap
-  float czSeamY = czBand(czP.y, 0.3, czBelt - 0.004);
-  float czSeams = (czLine(czP.x, 1.02 - (czP.y - 0.3) * 0.05, 0.003) + czLine(czP.x, -0.06, 0.003) + czLine(czP.x, -1.16 + (czP.y - 0.3) * 0.12, 0.003)) * czSeamY;
-  czSeams += czLine(czP.y, czBelt - 0.04, 0.0025) * czBand(czP.x, -2.02, -1.1);
-  czSeams += (czLine(czP.y, 0.86, 0.0025) + czLine(czP.y, 0.98, 0.0025)) * czBand(czP.x, -1.74, -1.56);
-  czSeams += (czLine(czP.x, -1.74, 0.0025) + czLine(czP.x, -1.56, 0.0025)) * czBand(czP.y, 0.86, 0.98);
-  float czHandleBox = (czBand(czP.x, 0.05, 0.23) + czBand(czP.x, -1.0, -0.83)) * czBand(czP.y, 0.941, 0.965) * czSide;
-  float czHandle = (czBand(czP.x, 0.056, 0.224) + czBand(czP.x, -0.994, -0.836)) * czBand(czP.y, 0.945, 0.961) * czSide;
-  czSeams += (czHandleBox - czHandle) * 1.0;
+  // ---- surfacing: rising shoulder crease and a lower door sculpt line
+  float czCreaseY = 1.035 + (0.987 - czP.x) * 0.0563;
+  float czCrease = exp(-pow((czP.y - czCreaseY + 0.014) / 0.012, 2.0)) * czBand(czP.x, -1.95, 1.8) * czSide;
+  float czSculptY = 0.54 + (0.987 - czP.x) * 0.071;
+  float czSculpt = exp(-pow((czP.y - czSculptY + 0.012) / 0.014, 2.0)) * czBand(czP.x, -1.0, 0.98) * czSide;
+
+  // ---- hinged doors: shut lines (rear door wraps the wheel arch), flush handles
+  float czSeamY = czBand(czP.y, 0.27, czBelt - 0.004);
+  float czSeams = (czLine(czP.x, 0.987, 0.003) + czLine(czP.x, -0.106, 0.003)) * czSeamY;
+  czSeams += czLine(czP.x, -1.316, 0.003) * czBand(czP.y, 0.8, czBelt - 0.004);
+  czSeams += czLine(length(vec2(czP.x + 1.43, czP.y - 0.35)), 0.47, 0.003) * czAA(-1.43, czP.x) * czBand(czP.y, 0.27, 0.81);
+  float czHandleBox = (czBand(czP.x, -0.07, 0.18) * czBand(czP.y, 0.982, 1.022) + czBand(czP.x, -1.21, -0.96) * czBand(czP.y, 1.042, 1.082)) * czSide;
+  float czHandle = (czBand(czP.x, -0.064, 0.174) * czBand(czP.y, 0.987, 1.017) + czBand(czP.x, -1.204, -0.966) * czBand(czP.y, 1.047, 1.077)) * czSide;
+  czSeams += (czHandleBox - czHandle);
   czSeams *= czSide * (1.0 - czArch);
   czSeams += czGate;
 
   // ---- satin-metal accents
-  float czDloTop = czBand(czP.y, czWinTop - 0.002, czWinTop + 0.013) * czBand(czP.x, -2.1, 0.37) * czSide;
-  float czDloBelt = czBand(czP.y, czBelt - 0.013, czBelt + 0.001) * czBand(czP.x, -2.12, 0.98) * czSide;
-  float czSill = czBand(czP.y, 0.298, 0.312) * czBand(czP.x, -0.98, 1.05) * czSide;
-  float czFender = czBand(czP.y, 0.742, 0.754) * czBand(czP.x, 0.78, 0.94) * czSide;
-  float czRail = czBand(czP.y, czYt - 0.055, czYt - 0.032) * czBand(czP.x, -2.0, 0.3) * smoothstep(0.15, 0.4, abs(czN.z));
-  float czRailGap = czBand(czP.y, czYt - 0.06, czYt - 0.055) * czBand(czP.x, -2.0, 0.3) * smoothstep(0.15, 0.4, abs(czN.z));
-  float czSatin = clamp(czBar + czRail + czBarR + czLip + czDiffuser * (1.0 - czFins) + czDloTop + czDloBelt + czSill + czFender + czGrilleRim + czFangBlade + czRoofFrame, 0.0, 1.0);
+  float czDloTop = czBand(czP.y, czWinTop - 0.002, czWinTop + 0.013) * czBand(czP.x, -1.95, 1.05) * czSide;
+  float czDloBelt = czBand(czP.y, czBelt - 0.013, czBelt + 0.001) * czBand(czP.x, -1.92, 1.2) * czSide;
+  float czSill = czBand(czP.y, 0.275, 0.292) * czBand(czP.x, -1.0, 1.02) * czSide;
+  float czRail = czBand(czP.y, czYt - 0.03, czYt - 0.004) * czBand(czP.x, -1.65, 0.06) * smoothstep(0.08, 0.3, abs(czN.z));
+  float czRailGap = czBand(czP.y, czYt - 0.036, czYt - 0.03) * czBand(czP.x, -1.65, 0.06) * smoothstep(0.08, 0.3, abs(czN.z));
+  float czSatin = clamp(czBar + czRail + czBarR + czLip + czDiffuser * (1.0 - czFins) + czDloTop + czDloBelt + czSill + czGrilleRim + czFangBlade + czRoofFrame, 0.0, 1.0);
   float czBright = clamp(czHandle, 0.0, 1.0);
-  float czGlossBlack = clamp(czFang * (1.0 - czFangBlade) + czGrille * (1.0 - czMeshL) + czPlateF + czSlot * (1.0 - czBlade) + czBladeHousing * (1.0 - czBladeR) + czSpoiler, 0.0, 1.0);
+  float czGlossBlack = clamp(czFang * (1.0 - czFangBlade) + czGrille * (1.0 - czMeshL) + czPlateF + czSlot * (1.0 - czBlade) + czBladeHousing * (1.0 - czBladeR), 0.0, 1.0);
   float czDarkTrim = clamp(czFrontLow + czRearLow * (1.0 - czDiffuser), 0.0, 1.0);
 
   // ---- finish
@@ -286,22 +302,20 @@ const ZONE_MAIN = /* glsl */ `
 
   czCol *= 1.0 - czHood * 0.05;
   czCol *= 1.0 - czSensor * 0.12;
+  czCol *= 1.0 - czCrease * 0.17 - czSculpt * 0.12;
   czCol = mix(czCol, vec3(0.012), czClad); czRough = mix(czRough, 0.55, czClad); czCC = mix(czCC, 0.25, czClad);
   czCol = mix(czCol, vec3(0.005), czArch); czRough = mix(czRough, 0.95, czArch); czCC = mix(czCC, 0.0, czArch);
   czCol = mix(czCol, vec3(0.009), czDarkTrim); czRough = mix(czRough, 0.5, czDarkTrim); czCC = mix(czCC, 0.2, czDarkTrim);
   czCol = mix(czCol, vec3(0.004), czGlossBlack); czRough = mix(czRough, 0.08, czGlossBlack); czCC = mix(czCC, 1.0, czGlossBlack);
   czCol = mix(czCol, vec3(0.05, 0.052, 0.056), czMeshL); czMetal = mix(czMetal, 0.6, czMeshL); czRough = mix(czRough, 0.35, czMeshL);
-  // glass: pillars piano black, panes with depth; rear cabin in privacy tint
-  czCol = mix(czCol, vec3(0.0025), czGlass); czRough = mix(czRough, 0.28, czGlass); czCC = mix(czCC, 0.35, czGlass); czCCR = mix(czCCR, 0.1, czGlass);
-  vec3 czPaneCol = mix(vec3(0.01, 0.011, 0.013), vec3(0.03, 0.033, 0.038), czSky) * mix(1.0, 0.62, czPrivacy);
-  czCol = mix(czCol, czPaneCol, czPane * czGlass); czRough = mix(czRough, 0.22, czPane * czGlass);
-  czCol = mix(czCol, vec3(0.002), czPillar); czRough = mix(czRough, 0.07, czPillar); czCC = mix(czCC, 1.0, czPillar); czCCR = mix(czCCR, 0.02, czPillar);
+  czCol = mix(czCol, vec3(0.0025), czGlass); czRough = mix(czRough, 0.46, czGlass); czCC = mix(czCC, 0.0, czGlass);
+  vec3 czPaneCol = mix(vec3(0.012, 0.013, 0.015), vec3(0.03, 0.032, 0.037), czSky) * mix(1.0, 0.72, czPrivacy);
+  czCol = mix(czCol, czPaneCol, czPane * czGlass); czRough = mix(czRough, 0.42, czPane * czGlass);
+  czCol = mix(czCol, vec3(0.002), czPillar); czRough = mix(czRough, 0.38, czPillar); czCC = mix(czCC, 0.0, czPillar);
   czRough = mix(czRough, 0.26, czRoof); czCC = mix(czCC, 0.3, czRoof); czCol = mix(czCol, vec3(0.005), czRoof);
-  // lamps
   czCol = mix(czCol, vec3(0.008, 0.009, 0.012), czLamp); czRough = mix(czRough, 0.05, czLamp); czCC = mix(czCC, 1.0, czLamp);
   czCol = mix(czCol, vec3(0.09, 0.004, 0.004), czTail); czRough = mix(czRough, 0.06, czTail); czCC = mix(czCC, 1.0, czTail);
   czCol = mix(czCol, vec3(0.2, 0.008, 0.008), czReflector);
-  // satin metal and bright handle inserts
   czCol = mix(czCol, vec3(0.58, 0.6, 0.63), czSatin); czMetal = mix(czMetal, 1.0, czSatin); czRough = mix(czRough, 0.34, czSatin); czCC = mix(czCC, 0.0, czSatin);
   czCol = mix(czCol, vec3(0.8, 0.82, 0.85), czBright); czMetal = mix(czMetal, 1.0, czBright); czRough = mix(czRough, 0.14, czBright);
   czCol = mix(czCol, czCol * 0.15, clamp(czSeams + czRailGap, 0.0, 1.0));
@@ -310,7 +324,7 @@ const ZONE_MAIN = /* glsl */ `
   diffuseColor.rgb = czCol;
   roughnessFactor = czRough;
   metalnessFactor = czMetal;
-  totalEmissiveRadiance += (czDrl * 1.15 + czProj * 0.7 + czBlade * 0.9) * vec3(0.86, 0.93, 1.0) * uDrl;
+  totalEmissiveRadiance += (czDrl * 1.15 + (czProj + czProjS) * 0.7 + czBlade * 0.9) * vec3(0.86, 0.93, 1.0) * uDrl;
   totalEmissiveRadiance += (czTailLine * 1.5 + czBladeR * 1.6 + czTail * 0.22 + czStop) * vec3(1.0, 0.045, 0.03) * uTail;
 `;
 
@@ -339,16 +353,16 @@ function makeBodyMaterial(uniforms) {
       .replace('#include <emissivemap_fragment>', `#include <emissivemap_fragment>\n${ZONE_MAIN}`)
       .replace(
         '#include <lights_physical_fragment>',
-        '#include <lights_physical_fragment>\nmaterial.specularF90 = mix(material.specularF90, 0.42, czGlass);\n#ifdef USE_CLEARCOAT\nmaterial.clearcoat = czCC;\nmaterial.clearcoatRoughness = czCCR;\n#endif\n#ifdef USE_IRIDESCENCE\nmaterial.iridescence *= czPaint;\n#endif',
+        '#include <lights_physical_fragment>\nmaterial.specularF90 = mix(material.specularF90, 0.16, czGlass);\n#ifdef USE_CLEARCOAT\nmaterial.clearcoat = czCC;\nmaterial.clearcoatRoughness = czCCR;\n#endif\n#ifdef USE_IRIDESCENCE\nmaterial.iridescence *= czPaint;\n#endif',
       );
   };
-  mat.customProgramCacheKey = () => 'cniq-mpv-body-premium-v1';
+  mat.customProgramCacheKey = () => 'cniq-mpv-body-premium-v6';
   return mat;
 }
 
 // ---------- wheels ----------
 // Low-profile tyre on a large 10-twin-spoke rim: machined faces, gloss-black pockets, polished lip.
-const RIM_R = 0.256;
+const RIM_R = 0.25;
 
 function tireTexture() {
   const c = document.createElement('canvas');
@@ -389,6 +403,29 @@ function tireGeometry() {
   const g = new THREE.LatheGeometry(pts, 96);
   g.rotateX(Math.PI / 2);
   return g;
+}
+
+function rimFaceTexture() {
+  const c = document.createElement('canvas');
+  c.width = c.height = 512;
+  const g = c.getContext('2d');
+  const k = 512 / 0.5; // texture spans -0.25..0.25 m
+  g.fillStyle = '#16171a';
+  g.fillRect(0, 0, 512, 512);
+  const ring = (r0, r1, col) => {
+    g.beginPath();
+    g.arc(256, 256, r1 * k, 0, Math.PI * 2);
+    g.arc(256, 256, r0 * k, 0, Math.PI * 2, true);
+    g.fillStyle = col;
+    g.fill();
+  };
+  ring(0.104, 0.226, '#d9dce0'); // machined spoke faces
+  ring(0.241, 0.25, '#c9ccd1'); // bright lip edge
+  const tex = new THREE.CanvasTexture(c);
+  tex.colorSpace = THREE.SRGBColorSpace;
+  tex.repeat.set(2, 2);
+  tex.offset.set(0.5, 0.5);
+  return tex;
 }
 
 function rimGeometry() {
@@ -506,7 +543,7 @@ export function createVehicle() {
       iridescence: 0.16, iridescenceIOR: 1.35, iridescenceThicknessRange: [260, 420],
     }),
     rubber: new THREE.MeshStandardMaterial({ map: tireTexture(), roughness: 0.86 }),
-    rim: new THREE.MeshStandardMaterial({ color: 0xd2d5da, metalness: 1, roughness: 0.2 }),
+    rim: new THREE.MeshStandardMaterial({ map: rimFaceTexture(), metalness: 0.85, roughness: 0.24 }),
     rimDark: new THREE.MeshPhysicalMaterial({ color: 0x0d0e10, metalness: 0.2, roughness: 0.18, clearcoat: 1 }),
     polish: new THREE.MeshStandardMaterial({ color: 0xe6e8eb, metalness: 1, roughness: 0.08 }),
     satin: new THREE.MeshStandardMaterial({ color: 0x9a9ea4, metalness: 1, roughness: 0.34 }),
@@ -528,10 +565,10 @@ export function createVehicle() {
   for (const side of [1, -1]) {
     const cap = new THREE.Mesh(new THREE.SphereGeometry(1, 32, 20), materials.paint);
     cap.scale.set(0.085, 0.064, 0.125);
-    cap.position.set(0.8, 1.19, side * 0.985);
+    cap.position.set(0.83, 1.245, side * 0.975);
     group.add(cap);
     const arm = new THREE.Mesh(new THREE.BoxGeometry(0.07, 0.032, 0.14), materials.gloss);
-    arm.position.set(0.84, 1.15, side * 0.875);
+    arm.position.set(0.87, 1.205, side * 0.865);
     group.add(arm);
     // piano-black lower shell and a slim smoked repeater lens on the leading edge
     const shell = new THREE.Mesh(new THREE.SphereGeometry(1, 32, 12, 0, Math.PI * 2, Math.PI * 0.62, Math.PI * 0.38), materials.gloss);
@@ -539,14 +576,14 @@ export function createVehicle() {
     shell.position.copy(cap.position);
     group.add(shell);
     const lens = new THREE.Mesh(new THREE.BoxGeometry(0.012, 0.008, 0.085), materials.lens);
-    lens.position.set(0.872, 1.165, side * 1.03);
+    lens.position.set(0.902, 1.22, side * 1.02);
     group.add(lens);
   }
 
   // shark-fin antenna
   const fin = new THREE.Mesh(new THREE.SphereGeometry(1, 24, 12), materials.gloss);
   fin.scale.set(0.13, 0.05, 0.034);
-  fin.position.set(-1.72, 1.658, 0);
+  fin.position.set(-1.66, 1.722, 0);
   group.add(fin);
 
   // wheels

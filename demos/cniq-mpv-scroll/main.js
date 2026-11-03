@@ -464,7 +464,7 @@ function buildTimeline(L) {
     .to(rig, { brake: 1.3, duration: 0.15 }, 9.75)
     // ---- camera study
     .to(rig, {
-      elev: 26, azim: 38, fov: 30, vw: L.studyVw, ty: 0.72, ay: 0.72, sx: L.studySx, sy: L.studySy,
+      elev: 26, azim: 38, fov: 30, vw: L.studyVw, ty: 0.8, ay: 0.8, sx: L.studySx, sy: L.studySy,
       fade: 16, duration: 1, ease: 'power2.inOut',
     }, 10)
     .to(rig, { brake: 0.2, drl: 1.6, duration: 0.5 }, 10.2)
