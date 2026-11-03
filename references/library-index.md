@@ -37,6 +37,7 @@ Use this file to decide what to read next. Load the smallest useful subset.
   - Use to enforce entrance-map variety, external library decisions, JS-required interaction handling, quality checklists, and post-screening adjustment rules.
 - `data/camera-shots-50.md`
   - Use for section entrance and reveal behavior.
+  - Use the `3D Camera Moves` category (56-65) when a section stages a real 3D subject with a scroll-driven camera.
 - `data/interaction-effects-50.md`
   - Use for hover, cursor, click, and scroll interactions.
 - `data/compositions.md`

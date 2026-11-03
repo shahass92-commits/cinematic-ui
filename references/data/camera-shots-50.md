@@ -79,8 +79,30 @@ Reference database mapping film camera techniques to CSS section entrance/transi
 | 54 | Curtain close | Theater curtain call | `&.exiting::before, &.exiting::after { content: ''; position: absolute; top: 0; width: 50%; height: 100%; background: #1a0000; transition: transform 1s ease; } &.exiting::before { left: 0; transform: translateX(-100%); } &.exiting::after { right: 0; transform: translateX(100%); } &.exiting.closing::before { transform: translateX(0); } &.exiting.closing::after { transform: translateX(0); }` | Theater-themed sections, act endings |
 | 55 | Glitch exit | Spider-Verse dimension break | `&.exiting { animation: glitchExit 0.5s steps(1) forwards; } @keyframes glitchExit { 0% { transform: translate(0); filter: none; } 20% { transform: translate(-5px, 3px); filter: hue-rotate(90deg); } 40% { transform: translate(5px, -3px); filter: hue-rotate(180deg); } 60% { transform: translate(-3px, -5px); filter: hue-rotate(270deg); clip-path: inset(20% 0 30% 0); } 80% { clip-path: inset(50% 0 40% 0); } 100% { opacity: 0; transform: scale(0.8); } }` | Glitch aesthetics, sci-fi/digital exits |
 
+## 3D Camera Moves — WebGL (Three.js + GSAP)
+
+Use these when a section stages a real 3D subject (a product, a vehicle, an object) instead of flat DOM layers. They assume one fixed WebGL canvas and a small `rig` object that GSAP tweens on a scrubbed ScrollTrigger timeline. Each frame turns the rig into a camera: a spherical position from `elev`/`azim`, a distance from `fov` + `vw` (metres visible at the subject), and a projection-matrix lens shift that pins an anchor to screen position `sx`/`sy`. Worked example: [`demos/cniq-mpv-scroll`](../../demos/cniq-mpv-scroll/) (the same vehicle in elevation, plan and free camera).
+
+| # | Camera Technique | Film Reference | Three.js / GSAP Implementation | Best For |
+|---|-----------------|----------------|-------------------------------|----------|
+| 56 | Planimetric elevation | Playtime (Tati) / The Grand Budapest Hotel (Anderson) | `rig.elev = 0; rig.azim = 0; rig.fov = 9;` (≈150 mm long lens). Camera height at the subject's mid-line keeps verticals straight and the frame flat. | Side-on product heroes, timelines that read left → right |
+| 57 | Lens-shift reframe (rising horizon) | Architectural shift-lens practice | Do not tilt the camera. After `updateProjectionMatrix()`, use `p = anchor.project(cam); pe[8] -= (sx*2-1) - p.x; pe[9] -= (1-sy*2) - p.y;` and invert into `projectionMatrixInverse`. Tween `sy` to move the ground line. | Rising ground / water lines, copy that must sit on a surface |
+| 58 | Crane up to plan + dolly-zoom breath | Vertigo dolly zoom (Hitchcock) | `tl.to(rig, {elev: 90, ease: 'power2.inOut'})` alongside `fov: 9 → 26 → 11`. Keep `vw` fixed so `dist = (vw/aspect)/(2·tan(fov/2))` holds the subject's size while the perspective breathes. Up vector: `(-sinA·sinE, cosE, -cosA·sinE)` (no gimbal flip at 90°). | Turning a side view into a map or overhead chapter |
+| 59 | God's-eye tracking | The Shining opening aerials (Kubrick) | `elev: 90`, `follow: 1`, anchor = subject; pin it at `sx/sy` while world-anchored textures (lane dashes) stream past. | Journeys, routes, logistics, live tracking |
+| 60 | Locked-off frame, subject drives through | Playtime roundabout (Tati) | Tween `follow: 1 → 0` toward a fixed `fx/fz` and widen `vw`; the subject crosses a still frame. Tween `follow` back to 1 to re-acquire it. | Bends, junctions, before/after reveals |
+| 61 | Crane down into three-quarter | Touch of Evil opening (Welles) | From plan, `{elev: 90 → 26, azim: 0 → 38, fov: 11 → 30, vw: wide → tight}` with `ty`/`ay` rising to the subject's centre. | Transition from diagram to object, "meet the product" |
+| 62 | Arc / orbit | Bad Boys rotating hero shot (Bay) | Scrub `azim` through 180°+ while easing `elev` down; keep `sx` constant so copy panels never collide with the subject. | 360° product reads, feature call-outs around an object |
+| 63 | Low-angle hero | Citizen Kane worm's-eye (Welles) | `elev ≈ 2–4°`, `fov ≈ 22°`, front three-quarter `azim`; raise light intensities (DRL, emissive) on the same tween. | Final brand statement, launch beats |
+| 64 | Dolly in to detail | Notorious crane to the key (Hitchcock) | Blend the target and anchor toward a sub-part's world position (`obj.getWorldPosition`) with a `focus` param while shrinking `vw` to the part's size. | Wheels, ports, materials, craftsmanship details |
+| 65 | Pull-back wide | Gone with the Wind pullback (Fleming) | Release `focus`, grow `vw`, keep orbiting `azim` slightly. Fade the ground plane by distance (shader alpha) so the set dissolves into the page colour. | Closing CTA, sign-off frames |
+
+Rules for this category:
+- Keep one set and one subject across shots, and move the camera rather than swapping scenes, so the sequence reads as a single take.
+- Project DOM anchors from 3D every frame (`Vector3.project`) so copy, labels and markers stay attached to the set.
+- Render only when the rig changes, and treat `prefers-reduced-motion` as `scrub: true` (no smoothing, same framing).
+
 ---
 
-**Total: 55 unique camera-to-CSS techniques across 4 categories**
+**Total: 65 camera techniques across 5 categories (55 CSS + 10 WebGL)**
 
-Categories index: Entrances (1-18), Transitions (19-28), Scroll Behaviors (29-44), Exit Animations (45-55)
+Categories index: Entrances (1-18), Transitions (19-28), Scroll Behaviors (29-44), Exit Animations (45-55), 3D Camera Moves (56-65)

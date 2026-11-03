@@ -144,7 +144,7 @@ All reference data lives in `references/`, organized by phase. Load only what th
 | `references/data/section-archetypes.md` | 91+ section skeletons |
 | `references/data/dna-index.tsv` | Design DNA index of 1,486 sites |
 | `references/data/design-dna-db.txt` | Site-level DNA data |
-| `references/data/camera-shots-50.md` | 55 entrance and reveal behaviors |
+| `references/data/camera-shots-50.md` | 55 entrance and reveal behaviors + 10 WebGL 3D camera moves |
 | `references/data/interaction-effects-50.md` | 55+ hover / click / scroll interactions |
 | `references/data/compositions.md` | 80 layout compositions |
 | `references/data/visual-elements.md` | 40 visual decoration elements |
@@ -153,6 +153,14 @@ All reference data lives in `references/`, organized by phase. Load only what th
 | `references/data/color-grades.md` | 40+ film palette to UI token translations |
 | `references/data/font-moods.md` | 30+ font pairings by tone |
 | `references/data/textures.md` | 30+ surface techniques |
+
+---
+
+## Demos
+
+| Demo | What it shows |
+|------|---------------|
+| [`demos/cniq-mpv-scroll`](./demos/cniq-mpv-scroll/) | GSAP + Three.js scroll drive: one white MPV in 5 side-elevation scenes, 5 plan-view scenes and a 5-shot 3D camera study (crane, arc, low-angle hero, dolly, pull-back) |
 
 ---
 
