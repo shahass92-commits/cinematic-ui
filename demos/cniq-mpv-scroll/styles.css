@@ -220,6 +220,51 @@ body {
   color: rgba(244, 244, 242, 0.7);
 }
 
+
+/* ---------- word-mask reveal (titles are split into words at boot) ---------- */
+.w { display: inline-block; overflow: hidden; vertical-align: top; padding-bottom: 0.1em; margin-bottom: -0.1em; }
+.wi { display: inline-block; will-change: transform; }
+/* icons draw themselves: every shape gets pathLength=1 at boot */
+.draw { stroke-dasharray: 1; stroke-dashoffset: 0; }
+.card { transform-origin: 50% 100%; }
+
+/* ---------- 07 · workflow on the mat ---------- */
+.s5b { padding: calc(var(--road-top) + 5.5vh) var(--gutter) 0; }
+.flow { position: relative; margin-top: clamp(26px, 4.5vh, 48px); }
+.flow-line { position: absolute; left: 0; right: 0; top: 7px; height: 1px; background: var(--hair-mat); }
+.flow-line b { position: absolute; inset: 0; background: linear-gradient(90deg, var(--gold), #e2c792); transform-origin: left; transform: scaleX(0); box-shadow: 0 0 12px rgba(226, 199, 146, 0.55); }
+.flow ol { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(8, minmax(0, 1fr)); gap: 14px; }
+.flow li { position: relative; padding-top: 30px; }
+.flow li i {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 15px;
+  height: 15px;
+  border-radius: 50%;
+  background: var(--mat);
+  border: 1.5px solid rgba(244, 244, 242, 0.5);
+  transition: background 0.3s ease, border-color 0.3s ease;
+}
+.flow li.on i { background: var(--gold); border-color: #e2c792; box-shadow: 0 0 0 5px rgba(184, 149, 90, 0.18); }
+.flow li b { display: block; font-family: var(--mono); font-weight: 500; font-size: 10px; letter-spacing: 0.14em; color: var(--gold); }
+.flow li strong { display: block; font-family: var(--display); font-weight: 800; font-size: clamp(14px, 1.25vw, 19px); text-transform: uppercase; letter-spacing: 0.01em; margin: 6px 0 4px; }
+.flow li span { display: block; font-size: 12.5px; line-height: 1.4; color: var(--on-mat-2); }
+.s5b .lede { margin-top: clamp(26px, 4.5vh, 44px); max-width: 52ch; }
+
+/* ---------- 13 · trip status (plan view, on paper) ---------- */
+.status { list-style: none; margin: 26px 0 0; padding: 0 0 0 18px; position: relative; display: grid; gap: 7px; font-family: var(--mono); font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; }
+.status::before { content: ""; position: absolute; left: 3px; top: 4px; bottom: 4px; width: 1px; background: var(--hair); }
+.status li { position: relative; display: flex; gap: 12px; color: var(--ink-3); transition: color 0.25s ease; }
+.status li::before { content: ""; position: absolute; left: -18px; top: 50%; width: 7px; height: 7px; margin-top: -3.5px; border-radius: 50%; background: var(--paper); border: 1px solid var(--ink-3); transition: all 0.25s ease; }
+.status li b { font-weight: 500; color: inherit; opacity: 0.7; }
+.status li.on { color: var(--ink); }
+.status li.on::before { border-color: var(--ink); background: var(--ink); }
+.status li.now { color: #7a5f30; }
+.status li.now::before { background: var(--gold); border-color: var(--gold); box-shadow: 0 0 0 4px rgba(184, 149, 90, 0.2); }
+.exc { margin: 20px 0 0; font-size: 12.5px; color: var(--ink-2); max-width: 40ch; }
+.exc span { display: inline-block; font-family: var(--mono); font-size: 9.5px; letter-spacing: 0.1em; text-transform: uppercase; padding: 3px 8px; margin: 0 5px 5px 0; border-radius: 999px; border: 1px solid rgba(180, 60, 50, 0.35); color: #9a3b30; }
+
 /* ---------- overhead scenes ---------- */
 .s6 { position: absolute; left: var(--gutter); right: var(--gutter); top: auto; bottom: 7vh; inset-inline: var(--gutter); height: auto; }
 .s6 .lede { max-width: 46ch; }
@@ -409,6 +454,16 @@ body {
   .svc svg { width: 36px; height: 36px; }
   .svc h3 { font-size: clamp(18px, 5.4vw, 26px); }
   .svc p { font-size: 13px; }
+  .s5b { padding-top: calc(var(--road-top) + 4vh); }
+  .flow-line { display: none; }
+  .flow ol { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px 16px; }
+  .flow li { padding: 0 0 0 24px; }
+  .flow li span { font-size: 11px; }
+  .flow li strong { font-size: 13px; margin: 2px 0 2px; }
+  .s5b .lede { font-size: 12.5px; margin-top: 26px; }
+  .s9c .title { font-size: clamp(20px, 6vw, 34px); }
+  .status { font-size: 9px; gap: 5px; margin-top: 16px; }
+  .exc { font-size: 11px; }
   .s10 .title, .s9b .title { font-size: clamp(20px, 6vw, 34px); }
   .roles { gap: 5px; margin-top: 16px; }
   .roles li { font-size: 8.5px; padding: 5px 8px; }

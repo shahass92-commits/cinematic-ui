@@ -1,5 +1,5 @@
 // CNIQ scroll drive: one Three.js stage, one GSAP master timeline scrubbed by ScrollTrigger.
-// Scenes 01–06 are side elevations, 07–12 are plan views, then a 3D camera study of the same vehicle.
+// Scenes 01–07 are side elevations, 08–14 are plan views, then a 3D camera study of the same vehicle.
 import * as THREE from 'three';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 import { createVehicle, SPEC } from './vehicle.js';
@@ -16,7 +16,7 @@ const $$ = (sel) => Array.from(document.querySelectorAll(sel));
 // ---------------------------------------------------------------- route
 const ROAD = 3.5; // half width of the road (m)
 const X0 = -320; // road start
-const X1 = 360; // start of the bend (long straight so the side-view drive can run longer)
+const X1 = 400; // start of the bend (long straight so the side-view drive can run longer)
 const RADIUS = 12;
 const RUN_OUT = 700;
 const L1 = X1 - X0;
@@ -269,9 +269,9 @@ function resize() {
 }
 
 // timeline map (seconds). The study starts once the car has stopped on the vertical road.
-const TOTAL = 20.15;
-const STUDY = 16.15;
-const CRANE = [9, 9.95];
+const STUDY = 19.65;
+const TOTAL = STUDY + 4.1; // the last word reveal ends just after the pull-back
+const CRANE = [11, 11.95];
 const SCENES = [
   [0, 'SIDE ELEVATION'],
   [1, 'SIDE ELEVATION'],
@@ -279,12 +279,14 @@ const SCENES = [
   [3, 'SIDE ELEVATION · SERVICES'],
   [5, 'SIDE ELEVATION · PLATFORM'],
   [8, 'SIDE ELEVATION'],
-  [9.95, 'PLAN VIEW'],
-  [10.75, 'PLAN VIEW · BEND'],
+  [9, 'SIDE ELEVATION · WORKFLOW'],
   [11.95, 'PLAN VIEW'],
-  [12.95, 'PLAN VIEW'],
-  [13.95, 'PLAN VIEW · ACCESS'],
-  [15, 'PLAN VIEW'],
+  [12.75, 'PLAN VIEW · BEND'],
+  [13.95, 'PLAN VIEW'],
+  [14.95, 'PLAN VIEW'],
+  [15.95, 'PLAN VIEW · ACCESS'],
+  [17, 'PLAN VIEW · STATUS'],
+  [18.4, 'PLAN VIEW'],
 ];
 const SHOTS = [
   [STUDY, 'SHOT 01', 'CRANE DOWN'],
@@ -468,23 +470,27 @@ function buildTimeline(L) {
     .to(rig, { s: S0 + 190, duration: 3 }, 5)
     // 06 · sectors
     .to(rig, { s: S0 + 216, duration: 1 }, 8)
+    // 07 · workflow: keep cruising while the flow line draws, with a gentle lens drift
+    .to(rig, { s: S0 + 272, duration: 2 }, 9)
+    .to(rig, { vw: L.vw2, sx: L.sx5, duration: 1, ease: 'sine.inOut' }, 9)
+    .to(rig, { vw: L.vw1, sx: L.sx4, duration: 1, ease: 'sine.inOut' }, 10)
     // crane up: elevation → plan, with a wide-lens breath in the middle (dolly zoom keeps the car's size)
-    .to(rig, { elev: 90, duration: 0.95, ease: 'power2.inOut' }, 9)
-    .to(rig, { edge: 0, ty: 0, sx: L.ohSx, sy: L.ohSy, vw: L.ohVw, duration: 0.95, ease: 'power2.inOut' }, 9)
-    .to(rig, { fov: 26, duration: 0.45, ease: 'power1.in' }, 9)
-    .to(rig, { fov: 11, duration: 0.5, ease: 'power1.out' }, 9.45)
-    .to(rig, { s: S0 + 245, duration: 0.95 }, 9)
-    // ---- 07 · plan, straight
-    .to(rig, { s: L1 - 40, duration: 0.8 }, 9.95)
-    // ---- 08 · the bend: hold a fixed frame and let the car drive through it
-    .to(rig, { follow: 0, vw: L.curveVw, sx: 0.5, sy: 0.5, duration: 0.35, ease: 'power2.inOut' }, 10.75)
-    .to(rig, { s: L1 + 36, duration: 0.9 }, 10.75)
-    // ---- 09–12 · long vertical road past eight milestones, camera re-acquires the car
-    .to(rig, { follow: 1, vw: L.vVw, sx: L.vSx, sy: L.vSy, duration: 0.45, ease: 'power2.inOut' }, 11.65)
-    .to(rig, { s: L1 + 52, duration: 0.45 }, 11.65)
-    .to(rig, { s: L1 + 222, duration: 3.75 }, 12.1)
-    .to(rig, { s: L1 + 232, duration: 0.3, ease: 'power2.out' }, 15.85)
-    .to(rig, { brake: 1.3, duration: 0.15 }, 15.9)
+    .to(rig, { elev: 90, duration: 0.95, ease: 'power2.inOut' }, 11)
+    .to(rig, { edge: 0, ty: 0, sx: L.ohSx, sy: L.ohSy, vw: L.ohVw, duration: 0.95, ease: 'power2.inOut' }, 11)
+    .to(rig, { fov: 26, duration: 0.45, ease: 'power1.in' }, 11)
+    .to(rig, { fov: 11, duration: 0.5, ease: 'power1.out' }, 11.45)
+    .to(rig, { s: S0 + 301, duration: 0.95 }, 11)
+    // ---- 08 · plan, straight
+    .to(rig, { s: L1 - 40, duration: 0.8 }, 11.95)
+    // ---- 09 · the bend: hold a fixed frame and let the car drive through it
+    .to(rig, { follow: 0, vw: L.curveVw, sx: 0.5, sy: 0.5, duration: 0.35, ease: 'power2.inOut' }, 12.75)
+    .to(rig, { s: L1 + 36, duration: 0.9 }, 12.75)
+    // ---- 10–14 · long vertical road past eight milestones, camera re-acquires the car
+    .to(rig, { follow: 1, vw: L.vVw, sx: L.vSx, sy: L.vSy, duration: 0.45, ease: 'power2.inOut' }, 13.65)
+    .to(rig, { s: L1 + 52, duration: 0.45 }, 13.65)
+    .to(rig, { s: L1 + 262, duration: 5.25 }, 14.1)
+    .to(rig, { s: L1 + 272, duration: 0.3, ease: 'power2.out' }, 19.35)
+    .to(rig, { brake: 1.3, duration: 0.15 }, 19.4)
     // ---- camera study
     .to(rig, {
       elev: 26, azim: 38, fov: 30, vw: L.studyVw, ty: 0.8, ay: 0.8, sx: L.studySx, sy: L.studySy,
@@ -501,16 +507,40 @@ function buildTimeline(L) {
     const items = $$(`${sel} .r`);
     const targets = items.length ? items : $$(sel);
     t.fromTo(targets, { autoAlpha: 0, y: 34 }, { autoAlpha: 1, y: 0, duration: 0.22, stagger: 0.035, ease: 'power2.out' }, at);
-    if (out != null) t.to(targets, { autoAlpha: 0, y: -34, duration: 0.18, stagger: 0.02, ease: 'power2.in' }, out);
+    // word-mask reveal on titles
+    const words = $$(`${sel} .wi`);
+    if (words.length) t.fromTo(words, { yPercent: 115, rotate: 5 }, { yPercent: 0, rotate: 0, duration: 0.32, stagger: 0.03, ease: 'power3.out' }, at + 0.02);
+    // icons draw themselves
+    const shapes = $$(`${sel} .svc .draw, ${sel} .panel .draw`);
+    if (shapes.length) t.fromTo(shapes, { strokeDashoffset: 1 }, { strokeDashoffset: 0, duration: 0.4, stagger: 0.02, ease: 'power1.inOut' }, at + 0.06);
+    if (out != null) {
+      t.to(targets, { autoAlpha: 0, y: -34, duration: 0.18, stagger: 0.02, ease: 'power2.in' }, out);
+      if (words.length) t.to(words, { yPercent: -110, duration: 0.18, stagger: 0.012, ease: 'power2.in' }, out);
+    }
     const panel = $(`${sel} .panel`);
     if (panel) {
-      t.fromTo(panel, { autoAlpha: 0, scale: 0.985 }, { autoAlpha: 1, scale: 1, duration: 0.2, ease: 'power2.out' }, at);
+      t.fromTo(panel, { autoAlpha: 0, scale: 0.985, clipPath: 'inset(0% 0% 100% 0%)' }, { autoAlpha: 1, scale: 1, clipPath: 'inset(0% 0% 0% 0%)', duration: 0.26, ease: 'power3.out' }, at);
       if (out != null) t.to(panel, { autoAlpha: 0, duration: 0.18, ease: 'power2.in' }, out + 0.04);
     }
   };
   const show = (sel, at, out, d = 0.2) => {
     t.fromTo(sel, { autoAlpha: 0 }, { autoAlpha: 1, duration: d }, at);
     if (out != null) t.to(sel, { autoAlpha: 0, duration: d }, out);
+  };
+  // stepper: lights list items one by one across [at, at + d]; `now` marks the current one
+  const step = (items, at, d, onCls = 'on', nowCls) => {
+    const proxy = { v: 0 };
+    t.fromTo(proxy, { v: 0 }, {
+      v: items.length,
+      duration: d,
+      onUpdate() {
+        const k = Math.floor(proxy.v);
+        items.forEach((li, j) => {
+          li.classList.toggle(onCls, j < k || (j === k && !nowCls && proxy.v > j));
+          if (nowCls) li.classList.toggle(nowCls, j === Math.min(k, items.length - 1) && proxy.v > 0);
+        });
+      },
+    }, at);
   };
 
   // 01 hero leaves as the mat rises
@@ -522,10 +552,18 @@ function buildTimeline(L) {
     .to('#ghost', { autoAlpha: 0, duration: 0.3 }, 3.0);
   reveal('.s2', 1.0, 1.8);
   reveal('.s3', 2.0, 2.8);
-  // card rails slide across the mat while the car drives; the meter fills with the rail
+  // card rails slide across the mat while the car drives: cards rise in one by one,
+  // their icons draw, and the meter counts up with the rail
   const rail = (sel, meter, at, d) => {
+    const cards = $$(`${sel} .card`);
     t.fromTo(sel, { x: () => window.innerWidth * 0.3 }, { x: () => -Math.max(0, $(sel).scrollWidth - window.innerWidth * 0.86), duration: d }, at);
+    t.fromTo(cards, { autoAlpha: 0, y: 70, rotateX: -24, transformPerspective: 900 }, { autoAlpha: 1, y: 0, rotateX: 0, duration: 0.42, stagger: d / (cards.length + 2), ease: 'power3.out' }, at + 0.04);
+    t.fromTo($$(`${sel} .draw`), { strokeDashoffset: 1 }, { strokeDashoffset: 0, duration: 0.45, stagger: d / (cards.length * 3), ease: 'power1.inOut' }, at + 0.12);
+    t.fromTo(`${sel} .tags span`, { autoAlpha: 0, x: -8 }, { autoAlpha: 1, x: 0, duration: 0.2, stagger: d / (cards.length * 3), ease: 'power2.out' }, at + 0.25);
     t.fromTo(meter, { scaleX: 0 }, { scaleX: 1, duration: d * 0.92 }, at + 0.08);
+    const label = $(meter).closest('.meter').querySelector('span');
+    const n = { v: 1 };
+    t.fromTo(n, { v: 1 }, { v: cards.length, duration: d * 0.92, onUpdate: () => { label.textContent = String(Math.round(n.v)).padStart(2, '0'); } }, at + 0.08);
   };
   reveal('.s4', 2.95, 4.85);
   rail('#cards', '#meter4', 2.95, 1.95);
@@ -535,25 +573,72 @@ function buildTimeline(L) {
     .to('#ghost2', { x: () => -($('#ghost2').offsetWidth - window.innerWidth * 0.25), duration: 2.8 }, 5.1)
     .to('#ghost2', { autoAlpha: 0, duration: 0.3 }, 7.6);
   reveal('.s5', 8.0, 8.92);
-  reveal('.s6', 9.95, 10.65);
-  show('#liveTag', 9.97, 11.6);
-  reveal('.s7', 10.95, 11.6);
-  show('#milestones', 11.85, 16.1, 0.25);
-  reveal('.s8', 11.95, 12.85);
-  reveal('.s9', 12.95, 13.85);
-  reveal('.s9b', 13.95, 14.9);
-  reveal('.s10', 15.0, 16.0);
+  t.fromTo('.s5 .sectors span, .s5 .sectors i', { autoAlpha: 0, y: 40, skewY: 4 }, { autoAlpha: 1, y: 0, skewY: 0, duration: 0.28, stagger: 0.05, ease: 'power3.out' }, 8.02);
+  // 07 · workflow: the gold line draws across and each node lights as the line reaches it
+  reveal('.s5b', 9.0, 10.85);
+  const flowItems = $$('.flow li');
+  t.fromTo('#flowFill', { scaleX: 0 }, { scaleX: 1, duration: 1.45 }, 9.15);
+  t.fromTo(flowItems, { autoAlpha: 0, y: 26 }, { autoAlpha: 1, y: 0, duration: 0.24, stagger: 1.45 / flowItems.length, ease: 'power2.out' }, 9.12);
+  step(flowItems, 9.15, 1.45);
+  reveal('.s6', 11.95, 12.65);
+  show('#liveTag', 11.97, 13.6);
+  reveal('.s7', 12.95, 13.6);
+  show('#milestones', 13.85, 19.6, 0.25);
+  reveal('.s8', 13.95, 14.85);
+  t.fromTo('.s8 .feat li', { autoAlpha: 0, x: -16 }, { autoAlpha: 1, x: 0, duration: 0.2, stagger: 0.05, ease: 'power2.out' }, 14.1);
+  reveal('.s9', 14.95, 15.85);
+  reveal('.s9b', 15.95, 16.9);
+  t.fromTo('.roles li', { autoAlpha: 0, scale: 0.8, y: 10 }, { autoAlpha: 1, scale: 1, y: 0, duration: 0.18, stagger: 0.04, ease: 'back.out(2)' }, 16.08);
+  // 13 · trip status steps from Scheduled to Billed as the car drives
+  reveal('.s9c', 17.0, 18.3);
+  step($$('#status li'), 17.12, 1.0, 'on', 'now');
+  t.fromTo('.exc span', { autoAlpha: 0, y: 8 }, { autoAlpha: 1, y: 0, duration: 0.16, stagger: 0.06 }, 17.5);
+  reveal('.s10', 18.4, 19.5);
+  t.fromTo('.chain li', { autoAlpha: 0, x: -14 }, { autoAlpha: 1, x: 0, duration: 0.16, stagger: 0.09, ease: 'power2.out' }, 18.55);
   show('#shot', STUDY + 0.05, null);
   reveal('.c1', STUDY + 0.2, STUDY + 0.9);
   reveal('.c2', STUDY + 1.1, STUDY + 1.88);
+  t.fromTo('.checks li', { autoAlpha: 0, x: -18 }, { autoAlpha: 1, x: 0, duration: 0.2, stagger: 0.08, ease: 'power2.out' }, STUDY + 1.2);
   reveal('.c3', STUDY + 2.15, STUDY + 2.9);
   reveal('.c4', STUDY + 3.05, STUDY + 3.5);
   reveal('.c5', STUDY + 3.62, null);
+  t.fromTo('.cta a', { autoAlpha: 0, y: 14 }, { autoAlpha: 1, y: 0, duration: 0.15, stagger: 0.07 }, STUDY + 3.7);
   t.set({}, {}, TOTAL);
   return t;
 }
 
 // ---------------------------------------------------------------- boot
+// split every title into masked words (keeps <br>, .dim and .iq spans intact)
+function splitWords(node) {
+  for (const child of Array.from(node.childNodes)) {
+    if (child.nodeType === 3) {
+      const parts = child.textContent.split(/(\s+)/);
+      if (!child.textContent.trim()) continue;
+      const frag = document.createDocumentFragment();
+      for (const p of parts) {
+        if (!p) continue;
+        if (/^\s+$/.test(p)) { frag.appendChild(document.createTextNode(p)); continue; }
+        const w = document.createElement('span');
+        w.className = 'w';
+        const wi = document.createElement('span');
+        wi.className = 'wi';
+        wi.textContent = p;
+        w.appendChild(wi);
+        frag.appendChild(w);
+      }
+      child.replaceWith(frag);
+    } else if (child.nodeType === 1 && child.tagName !== 'BR') {
+      splitWords(child);
+    }
+  }
+}
+if (!reduceMotion) $$('.story .title').forEach(splitWords);
+$$('.card svg *, .svc svg *, .panel svg *').forEach((shape) => {
+  if (shape.tagName === 'g') return;
+  shape.setAttribute('pathLength', '1');
+  shape.classList.add('draw');
+});
+
 // about 1.4 viewports of scroll per timeline second: a longer, slower drive
 root.style.setProperty('--units', String(Math.round(TOTAL * 1.4)));
 resize();

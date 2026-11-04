@@ -2,8 +2,8 @@
 
 A GSAP + Three.js scroll experience for **Compass Nexus iQ (CNIQ)**. One white premium MPV drives a long dark mat road through:
 
-- **Scenes 01–06 · side elevation.** The mat rises under the car, ghost type passes behind it, and the copy sits on the road. Two premium glass card rails slide across the mat while the car keeps driving: six services, then eight Compass Nexus iQ platform modules (compassnai.com), each with a scrubbed progress meter.
-- **Scenes 07–12 · plan view.** A crane-up turns the elevation into a top shot. The car takes a bend, then runs a long vertical road where eight trip milestones (booking → payment) light up as it passes.
+- **Scenes 01–07 · side elevation.** The mat rises under the car, ghost type passes behind it, and the copy sits on the road. Two premium glass card rails slide across the mat while the car keeps driving: six services, then eight Compass Nexus iQ platform modules (compassnai.com), each with a scrubbed progress meter and a counter. Scene 07 draws a gold workflow line (request → account → trip → assign → live → verify → invoice → insight) and lights each node as the line reaches it.
+- **Scenes 08–14 · plan view.** A crane-up turns the elevation into a top shot. The car takes a bend, then runs a long vertical road where eight trip milestones (booking → payment) light up as it passes. Scene 13 steps a trip-status list from Scheduled to Billed while the car drives.
 - **Camera study · 3D.** The same vehicle under a free camera: crane down, a 180° arc, a low-angle hero, a dolly-in to the wheel, and a pull-back.
 
 Every scene uses one procedural vehicle model, so side, top and 3D views stay consistent.
@@ -28,7 +28,7 @@ URL flags:
 |------|--------|
 | `?noscrub` | Scroll maps 1:1 to the timeline with no smoothing (useful for screenshots and QA) |
 
-For automated checks, `window.__cniq.seek(t)` scrolls to timeline second `t` (0–20.15). The scroll track is 28 viewports tall (about 1.4 viewports per timeline second).
+For automated checks, `window.__cniq.seek(t)` scrolls to timeline second `t` (0–23.75). The scroll track is 33 viewports tall (about 1.4 viewports per timeline second).
 
 ## Files
 
@@ -39,6 +39,16 @@ For automated checks, `window.__cniq.seek(t)` scrolls to timeline second `t` (0�
 | `main.js` | Route, road and mat shaders, camera rig, composition solver, GSAP master timeline |
 | `vehicle.js` | Procedural MPV: lofted body, per-fragment trim shader, wheels, mirrors |
 | `decisions.md` · `storyboard.md` · `compiled-spec.md` | cinematic-ui workflow artifacts for this demo |
+
+## GSAP effects
+
+Everything is one scrubbed master timeline, so every effect plays forward and backward with the scroll:
+
+- **Word-mask titles:** at boot every `.title` is split into masked words, which rise in with a slight rotation and leave upward.
+- **Card rails:** cards rise in one by one with a 3D tilt, their icons draw themselves (`pathLength=1` + `stroke-dashoffset`), tag chips slide in, and the meter's counter ticks up.
+- **Steppers:** the workflow nodes and the trip-status list are lit by a proxy tween whose `onUpdate` toggles classes.
+- **Smaller staggers:** the sectors line, reliability features, role chips, the verified chain, the inspection checks, and the CTA buttons.
+- `prefers-reduced-motion` skips the word split and keeps the plain fades.
 
 ## How the camera works
 

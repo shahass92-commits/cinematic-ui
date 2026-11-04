@@ -41,7 +41,7 @@
   <div class="hud" aria-hidden="true">
     <div class="hud-speed"><span id="speed">00</span> KM/H</div>
     <div class="hud-scene">
-      <div><span id="sceneNo">01</span> / <span id="sceneOf">12</span> · <span id="sceneName">SIDE ELEVATION</span></div>
+      <div><span id="sceneNo">01</span> / <span id="sceneOf">14</span> · <span id="sceneName">SIDE ELEVATION</span></div>
       <div class="hud-lens" id="lens">LENS 152MM · TILT 00°</div>
     </div>
     <div class="hud-rail"><i id="railFill"></i></div>
@@ -217,9 +217,29 @@
       <p class="lede r">Direct agreements and partner operations, run from one command centre.</p>
     </section>
 
+    <!-- ===================== 07 · SIDE · workflow ===================== -->
+    <section class="scene s5b on-road" aria-labelledby="h5b">
+      <p class="eyebrow r">06 — How it flows</p>
+      <h2 id="h5b" class="title rail-title r">Request to insight<span class="dim">, one workflow.</span></h2>
+      <div class="flow r">
+        <div class="flow-line" aria-hidden="true"><b id="flowFill"></b></div>
+        <ol>
+          <li><i></i><b>01</b><strong>Request</strong><span>Customer or admin intake</span></li>
+          <li><i></i><b>02</b><strong>Account</strong><span>Customer &amp; contract identified</span></li>
+          <li><i></i><b>03</b><strong>Trip</strong><span>Trip created with a Trip ID</span></li>
+          <li><i></i><b>04</b><strong>Assign</strong><span>Vehicle &amp; driver assigned</span></li>
+          <li><i></i><b>05</b><strong>Live</strong><span>GPS-tracked operations</span></li>
+          <li><i></i><b>06</b><strong>Verify</strong><span>Trip verified and locked</span></li>
+          <li><i></i><b>07</b><strong>Invoice</strong><span>Human-approved invoice</span></li>
+          <li><i></i><b>08</b><strong>Insight</strong><span>Payment tracking &amp; reports</span></li>
+        </ol>
+      </div>
+      <p class="lede r">Compass Nexus iQ AI reconciles and flags. A person approves every invoice before it goes out.</p>
+    </section>
+
     <!-- ===================== 06 · OVERHEAD ===================== -->
     <section class="scene s6" aria-labelledby="h6">
-      <p class="eyebrow r">06 — Live operations</p>
+      <p class="eyebrow r">07 — Live operations</p>
       <h2 id="h6" class="title r">Every vehicle.<br><span class="dim">In view.</span></h2>
       <p class="lede r">GPS, trip status and driver assignment stream into one command centre, from scheduled to completed.</p>
     </section>
@@ -227,14 +247,14 @@
 
     <!-- ===================== 07 · OVERHEAD ===================== -->
     <section class="scene s7" aria-labelledby="h7">
-      <p class="eyebrow r">07 — Routing</p>
+      <p class="eyebrow r">08 — Routing</p>
       <h2 id="h7" class="title r">Every turn,<br><span class="dim">accounted for.</span></h2>
       <p class="lede r">Routes, rosters and shifts are planned together, so pickups land on time and the kilometres on every trip stay honest.</p>
     </section>
 
     <!-- ===================== 08 · OVERHEAD ===================== -->
     <section class="scene s8 col" aria-labelledby="h8">
-      <p class="eyebrow r">08 — Reliability</p>
+      <p class="eyebrow r">09 — Reliability</p>
       <h2 id="h8" class="title r"><span class="dim">Reliability</span><br>at every<br>milestone</h2>
       <ul class="feat r">
         <li>Real-time<br>tracking</li><li aria-hidden="true">/</li>
@@ -259,7 +279,7 @@
 
     <!-- ===================== 11 · OVERHEAD · security ===================== -->
     <section class="scene s9b col" aria-labelledby="h9b">
-      <p class="eyebrow r">09 — Security &amp; audit</p>
+      <p class="eyebrow r">10 — Security &amp; audit</p>
       <h2 id="h9b" class="title r">Right data.<br><span class="dim">Right people.</span></h2>
       <ul class="roles r" aria-label="Access roles">
         <li>Super Admin</li><li>Business Admin</li><li>Finance</li><li>Operations</li><li>Fleet Manager</li><li>Customer Admin</li><li>Driver</li><li>Employee</li>
@@ -267,9 +287,27 @@
       <p class="lede r">Every change keeps the old value, the new value, who made it, when and why.</p>
     </section>
 
+    <!-- ===================== 13 · OVERHEAD · trip status ===================== -->
+    <section class="scene s9c col" aria-labelledby="h9c">
+      <p class="eyebrow r">11 — Trip status</p>
+      <h2 id="h9c" class="title r">Every status<span class="dim">, on record.</span></h2>
+      <ol class="status r" id="status">
+        <li><b>01</b>Scheduled</li>
+        <li><b>02</b>Assigned</li>
+        <li><b>03</b>Driver en route</li>
+        <li><b>04</b>Vehicle arrived</li>
+        <li><b>05</b>Passenger picked up</li>
+        <li><b>06</b>Trip started</li>
+        <li><b>07</b>Trip completed</li>
+        <li><b>08</b>Verified</li>
+        <li><b>09</b>Billed</li>
+      </ol>
+      <p class="exc r"><span>Cancelled</span><span>No show</span><span>Disputed</span> flagged for human review, never billed silently.</p>
+    </section>
+
     <!-- ===================== 10 · OVERHEAD ===================== -->
     <section class="scene s10 col" aria-labelledby="h10">
-      <p class="eyebrow r">10 — Verified</p>
+      <p class="eyebrow r">12 — Verified</p>
       <h2 id="h10" class="title r">From booking<br><span class="dim">to verified invoice.</span></h2>
       <p class="lede r">Every trip is confirmed, verified and locked before it is billed, and every invoice links back to the trips behind it.</p>
       <ol class="chain r">
@@ -280,13 +318,13 @@
     <!-- milestones pinned to the road (positions are projected from 3D each frame) -->
     <ol class="milestones" id="milestones" aria-label="Trip milestones">
       <li data-z="60"><b>01</b><span>Booking confirmed</span></li>
-      <li data-z="80"><b>02</b><span>Vehicle &amp; driver assigned</span></li>
-      <li data-z="100"><b>03</b><span>Driver en route</span></li>
-      <li data-z="120"><b>04</b><span>Passenger picked up</span></li>
-      <li data-z="140"><b>05</b><span>Trip completed</span></li>
-      <li data-z="160"><b>06</b><span>Trip verified</span></li>
-      <li data-z="180"><b>07</b><span>Invoice generated</span></li>
-      <li data-z="200"><b>08</b><span>Payment tracked</span></li>
+      <li data-z="85"><b>02</b><span>Vehicle &amp; driver assigned</span></li>
+      <li data-z="110"><b>03</b><span>Driver en route</span></li>
+      <li data-z="135"><b>04</b><span>Passenger picked up</span></li>
+      <li data-z="160"><b>05</b><span>Trip completed</span></li>
+      <li data-z="185"><b>06</b><span>Trip verified</span></li>
+      <li data-z="210"><b>07</b><span>Invoice generated</span></li>
+      <li data-z="235"><b>08</b><span>Payment tracked</span></li>
     </ol>
 
     <!-- ===================== CAMERA STUDY · 3D ===================== -->
