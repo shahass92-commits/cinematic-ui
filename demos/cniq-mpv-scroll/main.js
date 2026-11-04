@@ -237,6 +237,13 @@ let tl = null;
 let lastKey = '';
 // 3D rail cards: GSAP tweens `in` (entrance 0..1); frame() composes the full transform every tick
 let railCards = [];
+// pointer tilt for the 3D cards (smoothed each frame); stays at rest on touch-only devices
+const pointer = { x: 0, y: 0, sx: 0, sy: 0 };
+window.addEventListener('pointermove', (e) => {
+  if (e.pointerType === 'touch') return;
+  pointer.x = (e.clientX / window.innerWidth) * 2 - 1;
+  pointer.y = (e.clientY / window.innerHeight) * 2 - 1;
+}, { passive: true });
 
 const el = {
   speed: $('#speed'),
@@ -272,7 +279,7 @@ function resize() {
 
 // timeline map (seconds). The study starts once the car has stopped on the vertical road.
 const STUDY = 19.65;
-const TOTAL = STUDY + 4.1; // the last word reveal ends just after the pull-back
+const TOTAL = STUDY + 4.45; // the last word reveal and colour sweep end just after the pull-back
 const CRANE = [11, 11.95];
 const SCENES = [
   [0, 'SIDE ELEVATION'],
@@ -332,19 +339,27 @@ function updateCards3d(narrow) {
   const half = W / 2;
   const maxY = narrow ? 16 : 26;
   const depth = narrow ? 90 : 170;
+  pointer.sx += (pointer.x - pointer.sx) * 0.08;
+  pointer.sy += (pointer.y - pointer.sy) * 0.08;
+  const now = performance.now() / 1000;
+  let i = 0;
   for (const c of railCards) {
+    i++;
     if (c.rail.style.visibility === 'hidden') continue;
     const x = gsap.getProperty(c.rail, 'x');
     const cx = c.el.offsetLeft + c.el.offsetWidth / 2 + x;
     const n = Math.max(-1.5, Math.min(1.5, (cx - half) / half));
     const a = Math.abs(n);
     const e = 1 - c.in; // entrance remainder
-    const ry = -n * maxY + e * 34;
-    const rx = e * -26;
-    const tz = -Math.pow(a, 1.4) * depth - e * 160;
-    const ty = e * 90 + a * a * 10;
+    const focus = Math.max(0, 1 - a); // the card nearest the centre reacts most to the pointer
+    const float = reduceMotion ? 0 : Math.sin(now * 1.3 + i * 0.9) * 4 * c.in;
+    const ry = -n * maxY + e * 34 + pointer.sx * 9 * focus;
+    const rx = e * -26 - pointer.sy * 7 * focus;
+    const tz = -Math.pow(a, 1.4) * depth - e * 160 + focus * 26;
+    const ty = e * 90 + a * a * 10 + float;
     c.el.style.transform = `perspective(1100px) translate3d(0, ${ty.toFixed(1)}px, ${tz.toFixed(1)}px) rotateY(${ry.toFixed(2)}deg) rotateX(${rx.toFixed(2)}deg)`;
-    c.el.style.setProperty('--sheen', `${(50 - n * 70).toFixed(1)}%`);
+    c.el.style.setProperty('--sheen', `${(50 - n * 70 - pointer.sx * 18 * focus).toFixed(1)}%`);
+    c.el.style.setProperty('--rim', (focus * focus * c.in).toFixed(3));
     c.el.style.setProperty('--shade', (Math.min(1, a) * 0.42 + e * 0.3).toFixed(3));
   }
 }
@@ -537,6 +552,14 @@ function buildTimeline(L) {
     // word-mask reveal on titles
     const words = $$(`${sel} .wi`);
     if (words.length) t.fromTo(words, { yPercent: 115, rotate: 5 }, { yPercent: 0, rotate: 0, duration: 0.32, stagger: 0.03, ease: 'power3.out' }, at + 0.02);
+    // colour type on paper: the gradient sweeps through the second line, the eyebrow tracks in
+    const onPaper = !$(sel)?.classList.contains('on-road');
+    if (onPaper) {
+      const inks = $$(`${sel} .dim .wi`);
+      if (inks.length) t.fromTo(inks, { backgroundPosition: '100% 0%' }, { backgroundPosition: '0% 0%', duration: 0.7, stagger: 0.05, ease: 'power2.out' }, at + 0.06);
+      const eb = $$(`${sel} .eyebrow`);
+      if (eb.length) t.fromTo(eb, { letterSpacing: '0.62em' }, { letterSpacing: '0.14em', duration: 0.4, ease: 'expo.out' }, at);
+    }
     // icons draw themselves
     const shapes = $$(`${sel} .svc .draw, ${sel} .panel .draw`);
     if (shapes.length) t.fromTo(shapes, { strokeDashoffset: 1 }, { strokeDashoffset: 0, duration: 0.4, stagger: 0.02, ease: 'power1.inOut' }, at + 0.06);
@@ -640,6 +663,45 @@ function buildTimeline(L) {
   return t;
 }
 
+// ---------------------------------------------------------------- colour editions
+// One vehicle, five paints. The body shader and the painted parts share the colour.
+const EDITIONS = {
+  // env: how much of the white studio the paint mirrors; darker paints mirror less so they read true
+  pearl: { name: 'Pearl White', hex: 0xf2f1ed, env: 1 },
+  cosmos: { name: 'Cosmos Black', hex: 0x08090a, env: 0.22 },
+  graphite: { name: 'Graphite Grey', hex: 0x3e4146, env: 0.45 },
+  harbour: { name: 'Harbour Blue', hex: 0x15306a, env: 0.45 },
+  champagne: { name: 'Champagne Gold', hex: 0xb39b74, env: 0.8 },
+};
+const paintTarget = new THREE.Color();
+function setEdition(id, animate = true) {
+  const ed = EDITIONS[id] || EDITIONS.pearl;
+  paintTarget.setHex(ed.hex);
+  const targets = [vehicle.uniforms.uBody.value, vehicle.materials.paint.color];
+  gsap.to(targets, {
+    r: paintTarget.r, g: paintTarget.g, b: paintTarget.b,
+    duration: animate && !reduceMotion ? 0.9 : 0,
+    ease: 'power2.inOut',
+    overwrite: true,
+    onUpdate: () => { lastKey = ''; },
+    onComplete: () => { lastKey = ''; },
+  });
+  gsap.to([vehicle.materials.body, vehicle.materials.paint], {
+    envMapIntensity: ed.env,
+    duration: animate && !reduceMotion ? 0.9 : 0,
+    ease: 'power2.inOut',
+    overwrite: true,
+  });
+  $('#edName').textContent = ed.name;
+  $$('#editions button').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.ed === id)));
+  try { localStorage.setItem('cniq-edition', id); } catch (err) { /* storage unavailable */ }
+}
+$$('#editions button').forEach((b) => b.addEventListener('click', () => setEdition(b.dataset.ed)));
+let savedEdition = 'pearl';
+try { savedEdition = localStorage.getItem('cniq-edition') || 'pearl'; } catch (err) { /* storage unavailable */ }
+const urlEdition = params.get('edition');
+setEdition(EDITIONS[urlEdition] ? urlEdition : savedEdition, false);
+
 // ---------------------------------------------------------------- boot
 // split every title into masked words (keeps <br>, .dim and .iq spans intact)
 function splitWords(node) {
@@ -665,7 +727,10 @@ function splitWords(node) {
     }
   }
 }
-if (!reduceMotion) $$('.story .title').forEach(splitWords);
+if (!reduceMotion) {
+  $$('.story .title, .s1 .display').forEach(splitWords);
+  root.classList.add('split');
+}
 $$('.card').forEach((card) => {
   const sheen = document.createElement('i');
   sheen.className = 'sheen';
@@ -693,9 +758,21 @@ gsap.ticker.add(frame);
 frame();
 requestAnimationFrame(() => root.classList.add('ready'));
 
+// hero intro on load: words rise in, the brand and the location line follow, then the gold line shimmers
+if (!reduceMotion) {
+  const intro = gsap.timeline({ delay: 0.25 });
+  intro.fromTo('.s1 .display .wi', { yPercent: 115, rotate: 6 }, { yPercent: 0, rotate: 0, duration: 1.1, stagger: 0.09, ease: 'expo.out' })
+    .fromTo('.s1 .brand > *', { autoAlpha: 0, y: 16 }, { autoAlpha: 1, y: 0, duration: 0.7, stagger: 0.08, ease: 'power3.out' }, 0.1)
+    .fromTo('.s1 .grad .wi', { backgroundPosition: '100% 0%' }, { backgroundPosition: '0% 0%', duration: 1.6, stagger: 0.12, ease: 'power2.inOut' }, 0.35)
+    .fromTo('.s1-foot > *', { autoAlpha: 0, y: 14 }, { autoAlpha: 1, y: 0, duration: 0.7, stagger: 0.1, ease: 'power2.out' }, 0.6);
+  gsap.to('.s1 .grad .wi', { backgroundPosition: '100% 0%', duration: 3.2, ease: 'sine.inOut', repeat: -1, yoyo: true, delay: 2.4 });
+}
+
 // debug hook for automated checks: window.__cniq.seek(timelineSeconds)
 window.__cniq = {
   rig,
+  vehicle,
+  setEdition,
   get timeline() { return tl; },
   seek(time) {
     const st = tl && tl.scrollTrigger;

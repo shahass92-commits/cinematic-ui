@@ -49,6 +49,9 @@ Everything is one scrubbed master timeline, so every effect plays forward and ba
 - **3D card wall:** every frame, each rail card is turned (rotateY) and pushed back in depth (translateZ) by its distance from the screen centre, so the rail bends like a curved wall. A specular sheen sweeps across the glass and the edge cards darken. Cards also lift and flip in on entry (expo ease). The airport/intercity cards hinge in on a 3D door swing, and study panels tilt in.
 - **Steppers:** the workflow nodes and the trip-status list are lit by a proxy tween whose `onUpdate` toggles classes.
 - **Smaller staggers:** the sectors line, reliability features, role chips, the verified chain, the inspection checks, and the CTA buttons.
+- **Colour type on the white sections:** the second line of each title on paper is a blue → gold gradient that sweeps through as the words rise, and eyebrows track in from wide letter-spacing. The hero title has its own load intro and a slow gold shimmer.
+- **3D cards, premium pass:** card content floats at different depths (preserve-3d), the centre card follows the pointer with a gold rim light, and cards bob gently.
+- **Colour editions:** a picker switches the same vehicle between Pearl White, Cosmos Black, Graphite Grey, Harbour Blue and Champagne Gold (paint and studio reflection tween together). The choice is remembered per viewer; `?edition=cosmos` sets it from the URL.
 - `prefers-reduced-motion` skips the word split and keeps the plain fades.
 
 ## How the camera works

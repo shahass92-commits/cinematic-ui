@@ -82,6 +82,32 @@ body {
 .title { font-size: clamp(30px, 4.3vw, 70px); line-height: 0.98; }
 .dim { color: var(--ink-2); }
 .iq { text-transform: none; }
+
+/* ---------- colour type on the white sections ---------- */
+/* blue → gold ink for the second line of every title on paper; GSAP sweeps --gp on reveal */
+.scene:not(.on-road) .dim,
+.s1 .grad {
+  background: linear-gradient(100deg, #2a46b0 0%, #4f66cf 20%, #b8955a 46%, #e2c792 54%, #b8955a 62%, #2a46b0 100%);
+  background-size: 260% 100%;
+  background-position: 100% 0;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+/* once titles are split into words, each word carries the gradient (inline-blocks paint their own text) */
+.split .scene:not(.on-road) .dim,
+.split .s1 .grad { background: none; color: inherit; }
+.split .scene:not(.on-road) .dim .wi,
+.split .s1 .grad .wi {
+  background: linear-gradient(100deg, #2a46b0 0%, #4f66cf 20%, #b8955a 46%, #e2c792 54%, #b8955a 62%, #2a46b0 100%);
+  background-size: 260% 100%;
+  background-position: 100% 0;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+.scene:not(.on-road) .eyebrow { color: #8a6a35; }
+.scene:not(.on-road) .eyebrow .iq { color: inherit; }
 .on-road .dim { color: rgba(244, 244, 242, 0.42); }
 .eyebrow {
   font-family: var(--mono);
@@ -179,7 +205,7 @@ body {
     inset 0 1px 0 rgba(255, 255, 255, 0.09),
     inset 0 -1px 0 rgba(0, 0, 0, 0.35),
     0 34px 60px -34px rgba(0, 0, 0, 0.75);
-  overflow: hidden;
+  transform-style: preserve-3d;
 }
 .card::before {
   content: "";
@@ -193,14 +219,19 @@ body {
 .card::after {
   content: "";
   position: absolute;
-  right: -40px;
-  bottom: -40px;
-  width: 120px;
-  height: 120px;
-  border-radius: 50%;
-  border: 1px solid rgba(255, 255, 255, 0.05);
-  box-shadow: 0 0 0 18px rgba(255, 255, 255, 0.015), 0 0 0 38px rgba(255, 255, 255, 0.01);
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  /* concentric rings in the lower corner + a gold rim light that brightens when the card faces the viewer */
+  background: radial-gradient(circle at 100% 100%, transparent 0 58px, rgba(255, 255, 255, 0.05) 59px 60px, transparent 61px 78px, rgba(255, 255, 255, 0.03) 79px 80px, transparent 81px);
+  box-shadow: inset 0 0 0 1px rgba(226, 199, 146, calc(var(--rim, 0) * 0.55)), 0 0 40px -8px rgba(226, 199, 146, calc(var(--rim, 0) * 0.35));
 }
+/* content floats at different depths inside the card, so it parallaxes as the card turns */
+.card .idx { transform: translateZ(14px); }
+.card svg { transform: translateZ(46px); }
+.card h3 { transform: translateZ(32px); }
+.card p { transform: translateZ(18px); }
+.card .tags { transform: translateZ(26px); }
 .card .idx { display: flex; justify-content: space-between; font-family: var(--mono); font-size: 10px; letter-spacing: 0.16em; color: var(--gold); }
 .card .idx span + span { color: rgba(244, 244, 242, 0.32); }
 .card svg, .svc svg { width: 30px; height: 30px; fill: none; stroke: currentColor; stroke-width: 1.4; stroke-linecap: round; stroke-linejoin: round; }
@@ -494,6 +525,57 @@ body {
   .checks li { font-size: 12.5px; }
   .shot { top: 64px; padding: 8px 12px; }
   .hud-compass svg { width: 44px; height: 44px; }
+}
+
+/* ---------- colour editions ---------- */
+.editions {
+  position: fixed;
+  z-index: 7;
+  left: 50%;
+  bottom: 16px;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 7px 8px 7px 16px;
+  border-radius: 999px;
+  background: rgba(245, 245, 243, 0.78);
+  -webkit-backdrop-filter: blur(16px) saturate(1.2);
+  backdrop-filter: blur(16px) saturate(1.2);
+  border: 1px solid rgba(255, 255, 255, 0.8);
+  box-shadow: 0 18px 40px -24px rgba(0, 0, 0, 0.55), inset 0 1px 0 #fff;
+  font-family: var(--mono);
+  font-size: 10.5px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ink);
+  opacity: 0;
+  transition: opacity 0.8s ease 0.4s;
+}
+.ready .editions { opacity: 1; }
+.ed-label { color: var(--ink-2); }
+.ed-name { min-width: 15ch; }
+.ed-swatches { display: flex; gap: 6px; }
+.ed-swatches button {
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border-radius: 50%;
+  cursor: pointer;
+  background: radial-gradient(circle at 32% 28%, rgba(255, 255, 255, 0.75), transparent 42%), var(--sw);
+  border: 1px solid rgba(0, 0, 0, 0.18);
+  box-shadow: 0 0 0 2px transparent, inset 0 -3px 6px rgba(0, 0, 0, 0.25);
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+.ed-swatches button:hover { transform: translateY(-2px) scale(1.08); }
+.ed-swatches button[aria-pressed="true"] { box-shadow: 0 0 0 2px var(--paper), 0 0 0 3.5px var(--gold), inset 0 -3px 6px rgba(0, 0, 0, 0.25); }
+.ed-swatches button:focus-visible { outline: 2px solid var(--blue); outline-offset: 3px; }
+
+@media (max-aspect-ratio: 1/1) {
+  .editions { bottom: 58px; gap: 8px; padding: 6px 6px 6px 12px; }
+  .ed-label { display: none; }
+  .ed-name { min-width: 0; font-size: 9px; max-width: 11ch; }
+  .ed-swatches button { width: 20px; height: 20px; }
 }
 
 @media (prefers-reduced-motion: reduce) {
