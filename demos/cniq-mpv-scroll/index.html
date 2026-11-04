@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>CNIQ — Intelligent Navigation</title>
-  <meta name="description" content="Compass Nexus iQ: a scroll-driven drive in five side-view scenes, five overhead scenes and a 3D camera study of the same white MPV.">
+  <meta name="description" content="Compass Nexus iQ: a scroll-driven drive in six side-view scenes, six overhead scenes and a 3D camera study of the same white MPV.">
   <meta name="theme-color" content="#f5f5f3">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -32,6 +32,7 @@
   <!-- behind the road: oversized ghost type that the road and the vehicle cover -->
   <div class="back" aria-hidden="true">
     <div class="ghost" id="ghost">INTELLIGENT NAVIGATION</div>
+    <div class="ghost" id="ghost2">COMPASS NEXUS iQ</div>
   </div>
 
   <canvas id="stage" aria-hidden="true"></canvas>
@@ -40,7 +41,7 @@
   <div class="hud" aria-hidden="true">
     <div class="hud-speed"><span id="speed">00</span> KM/H</div>
     <div class="hud-scene">
-      <div><span id="sceneNo">01</span> / <span id="sceneOf">10</span> · <span id="sceneName">SIDE ELEVATION</span></div>
+      <div><span id="sceneNo">01</span> / <span id="sceneOf">14</span> · <span id="sceneName">SIDE ELEVATION</span></div>
       <div class="hud-lens" id="lens">LENS 152MM · TILT 00°</div>
     </div>
     <div class="hud-rail"><i id="railFill"></i></div>
@@ -83,45 +84,162 @@
       <p class="lede r">Trained drivers, inspected vehicles and real-time visibility, managed by a team that answers for every trip.</p>
     </section>
 
-    <!-- ===================== 04 · SIDE ===================== -->
+    <!-- ===================== 04 · SIDE · services rail ===================== -->
     <section class="scene s4 on-road" aria-labelledby="h4">
-      <p class="eyebrow r" id="h4">03 — Services</p>
+      <div class="rail-head">
+        <div>
+          <p class="eyebrow r">03 — Services</p>
+          <h2 id="h4" class="title rail-title r">What we run<span class="dim">, every day.</span></h2>
+        </div>
+        <div class="meter r" aria-hidden="true"><span>01</span><i><b id="meter4"></b></i><span>06</span></div>
+      </div>
       <div class="cards r" id="cards">
         <article class="card">
+          <div class="idx"><span>01</span><span>/ 06</span></div>
           <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="8" cy="7" r="3"/><circle cx="16.5" cy="8" r="2.5"/><path d="M2.5 20c0-3.6 2.5-6 5.5-6s5.5 2.4 5.5 6M13.5 14.6c.9-.4 1.9-.6 3-.6 2.6 0 5 2 5 5.5"/></svg>
           <h3>Employee transport</h3>
           <p>Shift-based pickups and drops for campuses, rostered and tracked end to end.</p>
+          <div class="tags"><span>Rostered</span><span>Tracked</span></div>
         </article>
         <article class="card">
+          <div class="idx"><span>02</span><span>/ 06</span></div>
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.5 4 5.5v6c0 5 3.4 8.6 8 10 4.6-1.4 8-5 8-10v-6z"/><path d="M14.5 9a3.5 3.5 0 1 0 0 5 3 3 0 1 1 0-5z"/></svg>
           <h3>Night-shift safety</h3>
           <p>Verified drivers, live tracking and SOS support for late and early shifts.</p>
+          <div class="tags"><span>SOS</span><span>Live GPS</span></div>
         </article>
         <article class="card">
+          <div class="idx"><span>03</span><span>/ 06</span></div>
           <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="1.5"/><path d="M3 10h18M8 3v4M16 3v4M8 14h3M8 17h6"/></svg>
           <h3>Corporate events</h3>
           <p>Coordinated fleets for offsites, client visits and large-group movements.</p>
+          <div class="tags"><span>Offsites</span><span>Groups</span></div>
         </article>
         <article class="card">
+          <div class="idx"><span>04</span><span>/ 06</span></div>
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2.5 15.5V12l2.5-4.5h9.5l4 4 3 .8v3.2"/><circle cx="7" cy="16" r="2"/><circle cx="17" cy="16" r="2"/><path d="M9 16h6M2.5 15.5H5M19 15.5h2.5"/></svg>
           <h3>Dedicated fleet</h3>
           <p>Vehicles and drivers deployed to your site on contract, with inspections on record.</p>
+          <div class="tags"><span>Contract</span><span>Inspected</span></div>
+        </article>
+        <article class="card">
+          <div class="idx"><span>05</span><span>/ 06</span></div>
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 20h18M5 20V9h5v11M10 13h9v7M7 9V5l9 2v6M16 4v3"/><path d="M12.5 16h1.5M16 16h1.5"/></svg>
+          <h3>Industrial &amp; port shifts</h3>
+          <p>Crew movement for plants, terminals and port operations, planned around every shift change.</p>
+          <div class="tags"><span>Plants</span><span>Ports</span></div>
+        </article>
+        <article class="card">
+          <div class="idx"><span>06</span><span>/ 06</span></div>
+          <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><path d="M12 12 18.5 5.5"/><circle cx="12" cy="12" r="1.2"/></svg>
+          <h3>Command centre</h3>
+          <p>Trips, vehicles, drivers and alerts watched from one operations desk.</p>
+          <div class="tags"><span>Alerts</span><span>Dispatch</span></div>
+        </article>
+      </div>
+    </section>
+
+    <!-- ===================== 05 · SIDE · Compass Nexus iQ platform rail ===================== -->
+    <section class="scene s4b on-road" aria-labelledby="h4b">
+      <div class="rail-head">
+        <div>
+          <p class="eyebrow r">04 — compassnai.com · Compass Nexus <span class="iq">iQ</span></p>
+          <h2 id="h4b" class="title rail-title r">One chain<span class="dim">, booking to payment.</span></h2>
+        </div>
+        <div class="meter r" aria-hidden="true"><span>01</span><i><b id="meter4b"></b></i><span>08</span></div>
+      </div>
+      <div class="cards r" id="cards2">
+        <article class="card">
+          <div class="idx"><span>01</span><span>/ 08</span></div>
+          <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="5.5" cy="18.5" r="2"/><circle cx="18.5" cy="5.5" r="2"/><path d="M7.5 18.5h7a3.5 3.5 0 0 0 0-7h-5a3.5 3.5 0 0 1 0-7h7"/></svg>
+          <h3>Trip management</h3>
+          <p>Every trip gets a unique Trip ID and moves from scheduled to billed with its full record attached.</p>
+          <div class="tags"><span>Trip ID</span><span>Status</span><span>GPS</span></div>
+        </article>
+        <article class="card">
+          <div class="idx"><span>02</span><span>/ 08</span></div>
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2.5 4 5.5v6c0 5 3.4 8.6 8 10 4.6-1.4 8-5 8-10v-6z"/><path d="m8.5 12 2.5 2.5 4.5-5"/></svg>
+          <h3>Trip verification</h3>
+          <p>Booking, vehicle, driver, KM and route are checked, then the trip is locked before it is billed.</p>
+          <div class="tags"><span>Verify</span><span>Lock</span></div>
+        </article>
+        <article class="card">
+          <div class="idx"><span>03</span><span>/ 08</span></div>
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 2.5h9l4 4v15l-2-1.2-2 1.2-2-1.2-2 1.2-2-1.2-2 1.2-1-.6z"/><path d="M15 2.5v4h4M8.5 10h7M8.5 13.5h7M8.5 17h4"/></svg>
+          <h3>Invoice generation</h3>
+          <p>GST-ready tax invoices with trip sheets, each linked back to the verified trips behind it.</p>
+          <div class="tags"><span>CGST</span><span>SGST</span><span>IGST</span></div>
+        </article>
+        <article class="card">
+          <div class="idx"><span>04</span><span>/ 08</span></div>
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3.5 17a8.5 8.5 0 1 1 17 0"/><path d="m12 17 4.5-5.5"/><circle cx="12" cy="17" r="1.3"/><path d="M6 13.2l1 .6M12 8.5v1.2M18 13.2l-1 .6"/></svg>
+          <h3>Vehicle quality</h3>
+          <p>Documents, condition and safety equipment on one scorecard, scored only against your criteria.</p>
+          <div class="tags"><span>Insurance</span><span>Fitness</span><span>PUC</span></div>
+        </article>
+        <article class="card">
+          <div class="idx"><span>05</span><span>/ 08</span></div>
+          <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="2.5" y="5" width="19" height="14" rx="2"/><circle cx="8.5" cy="11" r="2.3"/><path d="M5 16.5c.6-1.7 2-2.6 3.5-2.6s2.9.9 3.5 2.6M14.5 10h4.5M14.5 13h3"/></svg>
+          <h3>Driver management</h3>
+          <p>Licences, background verification, training and shift assignment, kept access-controlled.</p>
+          <div class="tags"><span>Licence</span><span>Training</span></div>
+        </article>
+        <article class="card">
+          <div class="idx"><span>06</span><span>/ 08</span></div>
+          <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="2.5" y="4" width="19" height="13" rx="1.5"/><path d="M8 21h8M12 17v4M6 13l3-3 2.5 2 4.5-4.5"/></svg>
+          <h3>Customer portal</h3>
+          <p>Clients view and verify trips, raise disputes and download invoices and trip sheets.</p>
+          <div class="tags"><span>Verify</span><span>Download</span></div>
+        </article>
+        <article class="card">
+          <div class="idx"><span>07</span><span>/ 08</span></div>
+          <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="6.5" y="2.5" width="11" height="19" rx="2.2"/><path d="M10.5 5.5h3M12 18.2h.01"/><path d="M9.5 11.5 11 13l3.5-3.5"/></svg>
+          <h3>Employee &amp; driver apps</h3>
+          <p>Booking, live ETA, SOS and feedback for riders. Schedules, trip start and inspections for drivers.</p>
+          <div class="tags"><span>ETA</span><span>SOS</span><span>Inspection</span></div>
+        </article>
+        <article class="card">
+          <div class="idx"><span>08</span><span>/ 08</span></div>
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M5.6 18.4l2.1-2.1M16.3 7.7l2.1-2.1"/><circle cx="12" cy="12" r="3.4"/></svg>
+          <h3>Compass Nexus <span class="iq">iQ</span> AI</h3>
+          <p>Flags KM mismatches, duplicate trips and rate gaps for human review. It never approves on its own.</p>
+          <div class="tags"><span>Audit</span><span>Reconcile</span></div>
         </article>
       </div>
     </section>
 
     <!-- ===================== 05 · SIDE ===================== -->
     <section class="scene s5 on-road" aria-labelledby="h5">
-      <p class="eyebrow r">04 — Built for</p>
+      <p class="eyebrow r">05 — Built for</p>
       <h2 id="h5" class="sectors r">
         <span>IT campuses</span><i>/</i><span>Corporate offices</span><i>/</i><span>Industrial sites</span><i>/</i><span>Ports</span>
       </h2>
       <p class="lede r">Direct agreements and partner operations, run from one command centre.</p>
     </section>
 
+    <!-- ===================== 07 · SIDE · workflow ===================== -->
+    <section class="scene s5b on-road" aria-labelledby="h5b">
+      <p class="eyebrow r">06 — How it flows</p>
+      <h2 id="h5b" class="title rail-title r">Request to insight<span class="dim">, one workflow.</span></h2>
+      <div class="flow r">
+        <div class="flow-line" aria-hidden="true"><b id="flowFill"></b></div>
+        <ol>
+          <li><i></i><b>01</b><strong>Request</strong><span>Customer or admin intake</span></li>
+          <li><i></i><b>02</b><strong>Account</strong><span>Customer &amp; contract identified</span></li>
+          <li><i></i><b>03</b><strong>Trip</strong><span>Trip created with a Trip ID</span></li>
+          <li><i></i><b>04</b><strong>Assign</strong><span>Vehicle &amp; driver assigned</span></li>
+          <li><i></i><b>05</b><strong>Live</strong><span>GPS-tracked operations</span></li>
+          <li><i></i><b>06</b><strong>Verify</strong><span>Trip verified and locked</span></li>
+          <li><i></i><b>07</b><strong>Invoice</strong><span>Human-approved invoice</span></li>
+          <li><i></i><b>08</b><strong>Insight</strong><span>Payment tracking &amp; reports</span></li>
+        </ol>
+      </div>
+      <p class="lede r">Compass Nexus iQ AI reconciles and flags. A person approves every invoice before it goes out.</p>
+    </section>
+
     <!-- ===================== 06 · OVERHEAD ===================== -->
     <section class="scene s6" aria-labelledby="h6">
-      <p class="eyebrow r">05 — Live operations</p>
+      <p class="eyebrow r">07 — Live operations</p>
       <h2 id="h6" class="title r">Every vehicle.<br><span class="dim">In view.</span></h2>
       <p class="lede r">GPS, trip status and driver assignment stream into one command centre, from scheduled to completed.</p>
     </section>
@@ -129,14 +247,14 @@
 
     <!-- ===================== 07 · OVERHEAD ===================== -->
     <section class="scene s7" aria-labelledby="h7">
-      <p class="eyebrow r">06 — Routing</p>
+      <p class="eyebrow r">08 — Routing</p>
       <h2 id="h7" class="title r">Every turn,<br><span class="dim">accounted for.</span></h2>
       <p class="lede r">Routes, rosters and shifts are planned together, so pickups land on time and the kilometres on every trip stay honest.</p>
     </section>
 
     <!-- ===================== 08 · OVERHEAD ===================== -->
     <section class="scene s8 col" aria-labelledby="h8">
-      <p class="eyebrow r">07 — Reliability</p>
+      <p class="eyebrow r">09 — Reliability</p>
       <h2 id="h8" class="title r"><span class="dim">Reliability</span><br>at every<br>milestone</h2>
       <ul class="feat r">
         <li>Real-time<br>tracking</li><li aria-hidden="true">/</li>
@@ -159,9 +277,37 @@
       </article>
     </section>
 
+    <!-- ===================== 11 · OVERHEAD · security ===================== -->
+    <section class="scene s9b col" aria-labelledby="h9b">
+      <p class="eyebrow r">10 — Security &amp; audit</p>
+      <h2 id="h9b" class="title r">Right data.<br><span class="dim">Right people.</span></h2>
+      <ul class="roles r" aria-label="Access roles">
+        <li>Super Admin</li><li>Business Admin</li><li>Finance</li><li>Operations</li><li>Fleet Manager</li><li>Customer Admin</li><li>Driver</li><li>Employee</li>
+      </ul>
+      <p class="lede r">Every change keeps the old value, the new value, who made it, when and why.</p>
+    </section>
+
+    <!-- ===================== 13 · OVERHEAD · trip status ===================== -->
+    <section class="scene s9c col" aria-labelledby="h9c">
+      <p class="eyebrow r">11 — Trip status</p>
+      <h2 id="h9c" class="title r">Every status<span class="dim">, on record.</span></h2>
+      <ol class="status r" id="status">
+        <li><b>01</b>Scheduled</li>
+        <li><b>02</b>Assigned</li>
+        <li><b>03</b>Driver en route</li>
+        <li><b>04</b>Vehicle arrived</li>
+        <li><b>05</b>Passenger picked up</li>
+        <li><b>06</b>Trip started</li>
+        <li><b>07</b>Trip completed</li>
+        <li><b>08</b>Verified</li>
+        <li><b>09</b>Billed</li>
+      </ol>
+      <p class="exc r"><span>Cancelled</span><span>No show</span><span>Disputed</span> flagged for human review, never billed silently.</p>
+    </section>
+
     <!-- ===================== 10 · OVERHEAD ===================== -->
     <section class="scene s10 col" aria-labelledby="h10">
-      <p class="eyebrow r">08 — Verified</p>
+      <p class="eyebrow r">12 — Verified</p>
       <h2 id="h10" class="title r">From booking<br><span class="dim">to verified invoice.</span></h2>
       <p class="lede r">Every trip is confirmed, verified and locked before it is billed, and every invoice links back to the trips behind it.</p>
       <ol class="chain r">
@@ -171,12 +317,14 @@
 
     <!-- milestones pinned to the road (positions are projected from 3D each frame) -->
     <ol class="milestones" id="milestones" aria-label="Trip milestones">
-      <li data-z="58"><b>01</b><span>Booking confirmed</span></li>
-      <li data-z="75"><b>02</b><span>Vehicle &amp; driver assigned</span></li>
-      <li data-z="92"><b>03</b><span>Passenger picked up</span></li>
-      <li data-z="109"><b>04</b><span>Trip completed</span></li>
-      <li data-z="126"><b>05</b><span>Trip verified</span></li>
-      <li data-z="143"><b>06</b><span>Invoice generated</span></li>
+      <li data-z="60"><b>01</b><span>Booking confirmed</span></li>
+      <li data-z="85"><b>02</b><span>Vehicle &amp; driver assigned</span></li>
+      <li data-z="110"><b>03</b><span>Driver en route</span></li>
+      <li data-z="135"><b>04</b><span>Passenger picked up</span></li>
+      <li data-z="160"><b>05</b><span>Trip completed</span></li>
+      <li data-z="185"><b>06</b><span>Trip verified</span></li>
+      <li data-z="210"><b>07</b><span>Invoice generated</span></li>
+      <li data-z="235"><b>08</b><span>Payment tracked</span></li>
     </ol>
 
     <!-- ===================== CAMERA STUDY · 3D ===================== -->

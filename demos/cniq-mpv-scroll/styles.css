@@ -81,6 +81,7 @@ body {
 .display { font-size: clamp(34px, 5.4vw, 88px); line-height: 0.96; }
 .title { font-size: clamp(30px, 4.3vw, 70px); line-height: 0.98; }
 .dim { color: var(--ink-2); }
+.iq { text-transform: none; }
 .on-road .dim { color: rgba(244, 244, 242, 0.42); }
 .eyebrow {
   font-family: var(--mono);
@@ -144,17 +145,125 @@ body {
 }
 .s5 .sectors i { font-style: normal; color: rgba(244, 244, 242, 0.3); font-weight: 600; }
 
-.s4 { padding: calc(var(--road-top) + 6vh) 0 0; }
-.s4 .eyebrow { padding-left: var(--gutter); }
-.cards { display: flex; gap: clamp(20px, 3vw, 48px); padding-left: var(--gutter); will-change: transform; }
-.card {
-  flex: 0 0 clamp(230px, 24vw, 330px);
-  border-left: 1px solid var(--hair-mat);
-  padding: 4px 0 4px 22px;
+.s4, .s4b { padding: calc(var(--road-top) + 5.5vh) 0 0; }
+
+/* rail header: title on the left, scrubbed progress meter on the right */
+.rail-head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 0 var(--gutter);
+  margin-bottom: clamp(18px, 3.2vh, 34px);
 }
+.rail-head .eyebrow { margin-bottom: 12px; }
+.rail-title { font-size: clamp(24px, 2.9vw, 48px); line-height: 1; }
+.meter { display: flex; align-items: center; gap: 12px; font-family: var(--mono); font-size: 10.5px; letter-spacing: 0.14em; color: var(--on-mat-2); padding-bottom: 6px; }
+.meter i { position: relative; display: block; width: clamp(80px, 10vw, 150px); height: 1px; background: var(--hair-mat); }
+.meter b { position: absolute; inset: 0; background: linear-gradient(90deg, var(--gold), #e2c792); transform-origin: left; transform: scaleX(0); }
+
+/* premium smoked-glass cards riding on the mat */
+.cards { display: flex; gap: clamp(14px, 1.5vw, 22px); padding-left: var(--gutter); will-change: transform; }
+.card {
+  position: relative;
+  flex: 0 0 clamp(248px, 21vw, 318px);
+  display: flex;
+  flex-direction: column;
+  padding: 20px 22px 20px;
+  border-radius: 14px;
+  background:
+    radial-gradient(120% 80% at 0% 0%, rgba(184, 149, 90, 0.10), transparent 55%),
+    linear-gradient(165deg, rgba(255, 255, 255, 0.085), rgba(255, 255, 255, 0.02) 52%, rgba(255, 255, 255, 0.035));
+  border: 1px solid rgba(255, 255, 255, 0.11);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.09),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.35),
+    0 34px 60px -34px rgba(0, 0, 0, 0.75);
+  overflow: hidden;
+}
+.card::before {
+  content: "";
+  position: absolute;
+  left: 18px;
+  right: 18px;
+  top: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(226, 199, 146, 0.85), transparent);
+}
+.card::after {
+  content: "";
+  position: absolute;
+  right: -40px;
+  bottom: -40px;
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  box-shadow: 0 0 0 18px rgba(255, 255, 255, 0.015), 0 0 0 38px rgba(255, 255, 255, 0.01);
+}
+.card .idx { display: flex; justify-content: space-between; font-family: var(--mono); font-size: 10px; letter-spacing: 0.16em; color: var(--gold); }
+.card .idx span + span { color: rgba(244, 244, 242, 0.32); }
 .card svg, .svc svg { width: 30px; height: 30px; fill: none; stroke: currentColor; stroke-width: 1.4; stroke-linecap: round; stroke-linejoin: round; }
-.card h3 { font-size: 15px; letter-spacing: 0.03em; margin: 18px 0 8px; }
-.card p { margin: 0; font-size: 13.5px; color: var(--on-mat-2); max-width: 30ch; }
+.card svg { margin-top: 18px; color: #f4efe4; }
+.card h3 { font-size: 15.5px; letter-spacing: 0.03em; margin: 16px 0 8px; }
+.card p { margin: 0; font-size: 13.25px; line-height: 1.5; color: var(--on-mat-2); }
+.card .tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: auto; padding-top: 16px; }
+.card .tags span {
+  font-family: var(--mono);
+  font-size: 9.5px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 4px 9px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.13);
+  background: rgba(255, 255, 255, 0.03);
+  color: rgba(244, 244, 242, 0.7);
+}
+
+
+/* ---------- word-mask reveal (titles are split into words at boot) ---------- */
+.w { display: inline-block; overflow: hidden; vertical-align: top; padding-bottom: 0.1em; margin-bottom: -0.1em; }
+.wi { display: inline-block; will-change: transform; }
+/* icons draw themselves: every shape gets pathLength=1 at boot */
+.draw { stroke-dasharray: 1; stroke-dashoffset: 0; }
+.card { transform-origin: 50% 100%; }
+
+/* ---------- 07 · workflow on the mat ---------- */
+.s5b { padding: calc(var(--road-top) + 5.5vh) var(--gutter) 0; }
+.flow { position: relative; margin-top: clamp(26px, 4.5vh, 48px); }
+.flow-line { position: absolute; left: 0; right: 0; top: 7px; height: 1px; background: var(--hair-mat); }
+.flow-line b { position: absolute; inset: 0; background: linear-gradient(90deg, var(--gold), #e2c792); transform-origin: left; transform: scaleX(0); box-shadow: 0 0 12px rgba(226, 199, 146, 0.55); }
+.flow ol { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(8, minmax(0, 1fr)); gap: 14px; }
+.flow li { position: relative; padding-top: 30px; }
+.flow li i {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 15px;
+  height: 15px;
+  border-radius: 50%;
+  background: var(--mat);
+  border: 1.5px solid rgba(244, 244, 242, 0.5);
+  transition: background 0.3s ease, border-color 0.3s ease;
+}
+.flow li.on i { background: var(--gold); border-color: #e2c792; box-shadow: 0 0 0 5px rgba(184, 149, 90, 0.18); }
+.flow li b { display: block; font-family: var(--mono); font-weight: 500; font-size: 10px; letter-spacing: 0.14em; color: var(--gold); }
+.flow li strong { display: block; font-family: var(--display); font-weight: 800; font-size: clamp(14px, 1.25vw, 19px); text-transform: uppercase; letter-spacing: 0.01em; margin: 6px 0 4px; }
+.flow li span { display: block; font-size: 12.5px; line-height: 1.4; color: var(--on-mat-2); }
+.s5b .lede { margin-top: clamp(26px, 4.5vh, 44px); max-width: 52ch; }
+
+/* ---------- 13 · trip status (plan view, on paper) ---------- */
+.status { list-style: none; margin: 26px 0 0; padding: 0 0 0 18px; position: relative; display: grid; gap: 7px; font-family: var(--mono); font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; }
+.status::before { content: ""; position: absolute; left: 3px; top: 4px; bottom: 4px; width: 1px; background: var(--hair); }
+.status li { position: relative; display: flex; gap: 12px; color: var(--ink-3); transition: color 0.25s ease; }
+.status li::before { content: ""; position: absolute; left: -18px; top: 50%; width: 7px; height: 7px; margin-top: -3.5px; border-radius: 50%; background: var(--paper); border: 1px solid var(--ink-3); transition: all 0.25s ease; }
+.status li b { font-weight: 500; color: inherit; opacity: 0.7; }
+.status li.on { color: var(--ink); }
+.status li.on::before { border-color: var(--ink); background: var(--ink); }
+.status li.now { color: #7a5f30; }
+.status li.now::before { background: var(--gold); border-color: var(--gold); box-shadow: 0 0 0 4px rgba(184, 149, 90, 0.2); }
+.exc { margin: 20px 0 0; font-size: 12.5px; color: var(--ink-2); max-width: 40ch; }
+.exc span { display: inline-block; font-family: var(--mono); font-size: 9.5px; letter-spacing: 0.1em; text-transform: uppercase; padding: 3px 8px; margin: 0 5px 5px 0; border-radius: 999px; border: 1px solid rgba(180, 60, 50, 0.35); color: #9a3b30; }
 
 /* ---------- overhead scenes ---------- */
 .s6 { position: absolute; left: var(--gutter); right: var(--gutter); top: auto; bottom: 7vh; inset-inline: var(--gutter); height: auto; }
@@ -195,6 +304,21 @@ body {
 .svc .hex path:first-child { stroke-width: 1.3; }
 .svc h3 { font-size: clamp(22px, 2.2vw, 32px); line-height: 1.02; margin: 16px 0 10px; }
 .svc p { margin: 0; color: #3c3c3c; font-size: clamp(14px, 1.15vw, 16.5px); }
+
+.roles { list-style: none; margin: 28px 0 0; padding: 0; display: flex; flex-wrap: wrap; gap: 8px; max-width: 44ch; }
+.roles li {
+  font-family: var(--mono);
+  font-size: 10.5px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 7px 12px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.7);
+  border: 1px solid var(--hair);
+  box-shadow: inset 0 1px 0 #fff, 0 10px 24px -18px rgba(0, 0, 0, 0.5);
+}
+.roles li:first-child { border-color: var(--gold); color: #7a5f30; }
+.s9b .lede { max-width: 40ch; }
 
 .chain { list-style: none; padding: 0; margin: 30px 0 0; display: flex; flex-wrap: wrap; gap: 8px 0; font-family: var(--mono); font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; }
 .chain li { display: inline-flex; align-items: center; }
@@ -314,7 +438,11 @@ body {
   .s2, .s3, .s5 { padding-top: calc(var(--road-top) + 5vh); }
   .title { font-size: clamp(28px, 8.4vw, 48px); }
   .lede { font-size: 14px; }
-  .card { flex-basis: 74vw; }
+  .s4, .s4b { padding-top: calc(var(--road-top) + 4vh); }
+  .rail-head { flex-direction: column; align-items: flex-start; gap: 12px; margin-bottom: 18px; }
+  .rail-title { font-size: clamp(22px, 6.6vw, 34px); }
+  .card { flex-basis: 72vw; padding: 18px 18px 18px; }
+  .card p { font-size: 12.75px; }
   .s6 { bottom: 5vh; }
   .s7 { bottom: 7vh; width: 70vw; }
   .s7 .title, .s6 .title { font-size: clamp(26px, 7.6vw, 40px); }
@@ -326,7 +454,20 @@ body {
   .svc svg { width: 36px; height: 36px; }
   .svc h3 { font-size: clamp(18px, 5.4vw, 26px); }
   .svc p { font-size: 13px; }
-  .s10 .title { font-size: clamp(20px, 6vw, 34px); }
+  .s5b { padding-top: calc(var(--road-top) + 4vh); }
+  .flow-line { display: none; }
+  .flow ol { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px 16px; }
+  .flow li { padding: 0 0 0 24px; }
+  .flow li span { font-size: 11px; }
+  .flow li strong { font-size: 13px; margin: 2px 0 2px; }
+  .s5b .lede { font-size: 12.5px; margin-top: 26px; }
+  .s9c .title { font-size: clamp(20px, 6vw, 34px); }
+  .status { font-size: 9px; gap: 5px; margin-top: 16px; }
+  .exc { font-size: 11px; }
+  .s10 .title, .s9b .title { font-size: clamp(20px, 6vw, 34px); }
+  .roles { gap: 5px; margin-top: 16px; }
+  .roles li { font-size: 8.5px; padding: 5px 8px; }
+  .s9b .lede { font-size: 12.5px; }
   .s10 .lede { font-size: 12.5px; }
   .chain { font-size: 9.5px; flex-direction: column; gap: 6px; }
   .chain li + li::before { width: 12px; margin: 0 8px 0 0; }
