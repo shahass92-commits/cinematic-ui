@@ -253,7 +253,7 @@ const ZONE_MAIN = /* glsl */ `
   float czFins = czDiffuser * czBand(fract(czX * 11.0), 0.0, 0.16) * czBand(czP.y, 0.29, 0.355);
 
   // ---- glass, pillars and roof
-  float czRoof = czAA(0.7, czN.y) * czBand(czP.x, -1.6, 0.18) * (1.0 - czAA(0.64, czZn));
+  float czRoof = czAA(0.7, czN.y) * czBand(czP.x, -1.78, 0.2) * (1.0 - czAA(0.94, czZn)); // black roof covers the full top
   float czRoofFrame = czAA(0.7, czN.y) * czBand(czP.x, -1.62, 0.2) * czBand(czZn, 0.64, 0.665);
   czGlass = max(czGlass, czRoof);
   float czPillar = czSideBand * (1.0 - clamp(czPane, 0.0, 1.0)) * czSide;
@@ -288,9 +288,9 @@ const ZONE_MAIN = /* glsl */ `
   float czSill = czBand(czP.y, 0.275, 0.292) * czBand(czP.x, -1.0, 1.02) * czSide;
   float czRail = czBand(czP.y, czYt - 0.03, czYt - 0.004) * czBand(czP.x, -1.65, 0.06) * smoothstep(0.08, 0.3, abs(czN.z));
   float czRailGap = czBand(czP.y, czYt - 0.036, czYt - 0.03) * czBand(czP.x, -1.65, 0.06) * smoothstep(0.08, 0.3, abs(czN.z));
-  float czSatin = clamp(czBar + czRail + czBarR + czLip + czDiffuser * (1.0 - czFins) + czDloTop + czDloBelt + czSill + czGrilleRim + czFangBlade + czRoofFrame, 0.0, 1.0);
+  float czSatin = clamp(czBar + czBarR + czLip + czDiffuser * (1.0 - czFins) + czDloTop + czDloBelt + czSill + czGrilleRim + czFangBlade, 0.0, 1.0);
   float czBright = clamp(czHandle, 0.0, 1.0);
-  float czGlossBlack = clamp(czFang * (1.0 - czFangBlade) + czGrille * (1.0 - czMeshL) + czPlateF + czSlot * (1.0 - czBlade) + czBladeHousing * (1.0 - czBladeR), 0.0, 1.0);
+  float czGlossBlack = clamp(czRail + czRoofFrame + czFang * (1.0 - czFangBlade) + czGrille * (1.0 - czMeshL) + czPlateF + czSlot * (1.0 - czBlade) + czBladeHousing * (1.0 - czBladeR), 0.0, 1.0);
   float czDarkTrim = clamp(czFrontLow + czRearLow * (1.0 - czDiffuser), 0.0, 1.0);
 
   // ---- finish
@@ -312,7 +312,7 @@ const ZONE_MAIN = /* glsl */ `
   vec3 czPaneCol = mix(vec3(0.012, 0.013, 0.015), vec3(0.03, 0.032, 0.037), czSky) * mix(1.0, 0.72, czPrivacy);
   czCol = mix(czCol, czPaneCol, czPane * czGlass); czRough = mix(czRough, 0.42, czPane * czGlass);
   czCol = mix(czCol, vec3(0.002), czPillar); czRough = mix(czRough, 0.38, czPillar); czCC = mix(czCC, 0.0, czPillar);
-  czRough = mix(czRough, 0.26, czRoof); czCC = mix(czCC, 0.3, czRoof); czCol = mix(czCol, vec3(0.005), czRoof);
+  czRough = mix(czRough, 0.6, czRoof); czCC = mix(czCC, 0.08, czRoof); czCCR = mix(czCCR, 0.25, czRoof); czCol = mix(czCol, vec3(0.004), czRoof);
   czCol = mix(czCol, vec3(0.008, 0.009, 0.012), czLamp); czRough = mix(czRough, 0.05, czLamp); czCC = mix(czCC, 1.0, czLamp);
   czCol = mix(czCol, vec3(0.09, 0.004, 0.004), czTail); czRough = mix(czRough, 0.06, czTail); czCC = mix(czCC, 1.0, czTail);
   czCol = mix(czCol, vec3(0.2, 0.008, 0.008), czReflector);

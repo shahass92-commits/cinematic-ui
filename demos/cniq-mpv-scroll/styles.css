@@ -226,7 +226,18 @@ body {
 .wi { display: inline-block; will-change: transform; }
 /* icons draw themselves: every shape gets pathLength=1 at boot */
 .draw { stroke-dasharray: 1; stroke-dashoffset: 0; }
-.card { transform-origin: 50% 100%; }
+.card { transform-origin: 50% 60%; backface-visibility: hidden; will-change: transform; --sheen: 50%; --shade: 0; }
+/* moving specular sheen + depth shade, driven per frame from the card's screen position */
+.card .sheen {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background:
+    linear-gradient(105deg, transparent 0%, transparent 38%, rgba(255, 246, 228, 0.13) 48%, rgba(255, 255, 255, 0.04) 54%, transparent 64%, transparent 100%) var(--sheen) 0 / 260% 100% no-repeat,
+    rgba(8, 8, 8, var(--shade));
+}
+.svc { backface-visibility: hidden; }
 
 /* ---------- 07 · workflow on the mat ---------- */
 .s5b { padding: calc(var(--road-top) + 5.5vh) var(--gutter) 0; }

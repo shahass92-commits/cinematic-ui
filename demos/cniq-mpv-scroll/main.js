@@ -235,6 +235,8 @@ let lastTime = performance.now();
 let speed = 0;
 let tl = null;
 let lastKey = '';
+// 3D rail cards: GSAP tweens `in` (entrance 0..1); frame() composes the full transform every tick
+let railCards = [];
 
 const el = {
   speed: $('#speed'),
@@ -322,6 +324,29 @@ function updateHud(t, kmh) {
   const mm = Math.round(12 / Math.tan((rig.fov * DEG) / 2));
   el.lens.textContent = `LENS ${mm}MM · TILT ${String(Math.round(rig.elev)).padStart(2, '0')}°`;
   el.rail.style.transform = `scaleX(${Math.min(1, t / TOTAL).toFixed(4)})`;
+}
+
+// Cards bend like a curved wall around the screen centre: they turn toward the viewer,
+// sink back in depth toward the edges, and a sheen sweeps across the glass as they pass.
+function updateCards3d(narrow) {
+  const half = W / 2;
+  const maxY = narrow ? 16 : 26;
+  const depth = narrow ? 90 : 170;
+  for (const c of railCards) {
+    if (c.rail.style.visibility === 'hidden') continue;
+    const x = gsap.getProperty(c.rail, 'x');
+    const cx = c.el.offsetLeft + c.el.offsetWidth / 2 + x;
+    const n = Math.max(-1.5, Math.min(1.5, (cx - half) / half));
+    const a = Math.abs(n);
+    const e = 1 - c.in; // entrance remainder
+    const ry = -n * maxY + e * 34;
+    const rx = e * -26;
+    const tz = -Math.pow(a, 1.4) * depth - e * 160;
+    const ty = e * 90 + a * a * 10;
+    c.el.style.transform = `perspective(1100px) translate3d(0, ${ty.toFixed(1)}px, ${tz.toFixed(1)}px) rotateY(${ry.toFixed(2)}deg) rotateX(${rx.toFixed(2)}deg)`;
+    c.el.style.setProperty('--sheen', `${(50 - n * 70).toFixed(1)}%`);
+    c.el.style.setProperty('--shade', (Math.min(1, a) * 0.42 + e * 0.3).toFixed(3));
+  }
 }
 
 const scr = { x: 0, y: 0, z: 0 };
@@ -424,6 +449,7 @@ function frame() {
   const ang = Math.atan2(scr2.y - scr.y, scr2.x - scr.x) / DEG;
   el.needle.style.transform = `rotate(${ang.toFixed(1)}deg)`;
 
+  updateCards3d(narrow);
   updateHud(tl ? tl.time() : 0, speed);
 
   // render only when something visible changed
@@ -437,6 +463,7 @@ function frame() {
 
 // ---------------------------------------------------------------- timeline
 function buildTimeline(L) {
+  railCards = [];
   Object.assign(rig, {
     s: S0, elev: 0, azim: 0, fov: 9, vw: L.vw0, follow: 1, fx: L.curveFx, fz: L.curveFz,
     ty: 0.45, ay: 0, edge: 1, sx: 0.5, sy: L.sy0, wheel: 0, fade: 4000, drl: 1.1, brake: 0,
@@ -519,7 +546,7 @@ function buildTimeline(L) {
     }
     const panel = $(`${sel} .panel`);
     if (panel) {
-      t.fromTo(panel, { autoAlpha: 0, scale: 0.985, clipPath: 'inset(0% 0% 100% 0%)' }, { autoAlpha: 1, scale: 1, clipPath: 'inset(0% 0% 0% 0%)', duration: 0.26, ease: 'power3.out' }, at);
+      t.fromTo(panel, { autoAlpha: 0, scale: 0.96, rotateY: 14, rotateX: 6, transformPerspective: 1200, transformOrigin: '0% 50%', clipPath: 'inset(0% 0% 100% 0%)' }, { autoAlpha: 1, scale: 1, rotateY: 0, rotateX: 0, clipPath: 'inset(0% 0% 0% 0%)', duration: 0.34, ease: 'power3.out' }, at);
       if (out != null) t.to(panel, { autoAlpha: 0, duration: 0.18, ease: 'power2.in' }, out + 0.04);
     }
   };
@@ -557,7 +584,11 @@ function buildTimeline(L) {
   const rail = (sel, meter, at, d) => {
     const cards = $$(`${sel} .card`);
     t.fromTo(sel, { x: () => window.innerWidth * 0.3 }, { x: () => -Math.max(0, $(sel).scrollWidth - window.innerWidth * 0.86), duration: d }, at);
-    t.fromTo(cards, { autoAlpha: 0, y: 70, rotateX: -24, transformPerspective: 900 }, { autoAlpha: 1, y: 0, rotateX: 0, duration: 0.42, stagger: d / (cards.length + 2), ease: 'power3.out' }, at + 0.04);
+    const states = cards.map((el) => ({ el, rail: $(sel), in: 0 }));
+    railCards.push(...states);
+    const st = d / (cards.length + 2);
+    t.fromTo(cards, { autoAlpha: 0 }, { autoAlpha: 1, duration: 0.3, stagger: st, ease: 'power1.out' }, at + 0.04);
+    t.fromTo(states, { in: 0 }, { in: 1, duration: 0.55, stagger: st, ease: 'expo.out' }, at + 0.04);
     t.fromTo($$(`${sel} .draw`), { strokeDashoffset: 1 }, { strokeDashoffset: 0, duration: 0.45, stagger: d / (cards.length * 3), ease: 'power1.inOut' }, at + 0.12);
     t.fromTo(`${sel} .tags span`, { autoAlpha: 0, x: -8 }, { autoAlpha: 1, x: 0, duration: 0.2, stagger: d / (cards.length * 3), ease: 'power2.out' }, at + 0.25);
     t.fromTo(meter, { scaleX: 0 }, { scaleX: 1, duration: d * 0.92 }, at + 0.08);
@@ -587,6 +618,8 @@ function buildTimeline(L) {
   reveal('.s8', 13.95, 14.85);
   t.fromTo('.s8 .feat li', { autoAlpha: 0, x: -16 }, { autoAlpha: 1, x: 0, duration: 0.2, stagger: 0.05, ease: 'power2.out' }, 14.1);
   reveal('.s9', 14.95, 15.85);
+  t.fromTo('.s9 .svc', { rotateY: -72, z: -120, transformPerspective: 1000, transformOrigin: '0% 50%' }, { rotateY: 0, z: 0, duration: 0.4, stagger: 0.12, ease: 'power3.out' }, 14.95)
+    .to('.s9 .svc', { rotateY: 60, transformOrigin: '100% 50%', duration: 0.2, stagger: 0.04, ease: 'power2.in' }, 15.85);
   reveal('.s9b', 15.95, 16.9);
   t.fromTo('.roles li', { autoAlpha: 0, scale: 0.8, y: 10 }, { autoAlpha: 1, scale: 1, y: 0, duration: 0.18, stagger: 0.04, ease: 'back.out(2)' }, 16.08);
   // 13 · trip status steps from Scheduled to Billed as the car drives
@@ -633,6 +666,12 @@ function splitWords(node) {
   }
 }
 if (!reduceMotion) $$('.story .title').forEach(splitWords);
+$$('.card').forEach((card) => {
+  const sheen = document.createElement('i');
+  sheen.className = 'sheen';
+  sheen.setAttribute('aria-hidden', 'true');
+  card.appendChild(sheen);
+});
 $$('.card svg *, .svc svg *, .panel svg *').forEach((shape) => {
   if (shape.tagName === 'g') return;
   shape.setAttribute('pathLength', '1');

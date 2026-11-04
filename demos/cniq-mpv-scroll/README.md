@@ -46,6 +46,7 @@ Everything is one scrubbed master timeline, so every effect plays forward and ba
 
 - **Word-mask titles:** at boot every `.title` is split into masked words, which rise in with a slight rotation and leave upward.
 - **Card rails:** cards rise in one by one with a 3D tilt, their icons draw themselves (`pathLength=1` + `stroke-dashoffset`), tag chips slide in, and the meter's counter ticks up.
+- **3D card wall:** every frame, each rail card is turned (rotateY) and pushed back in depth (translateZ) by its distance from the screen centre, so the rail bends like a curved wall. A specular sheen sweeps across the glass and the edge cards darken. Cards also lift and flip in on entry (expo ease). The airport/intercity cards hinge in on a 3D door swing, and study panels tilt in.
 - **Steppers:** the workflow nodes and the trip-status list are lit by a proxy tween whose `onUpdate` toggles classes.
 - **Smaller staggers:** the sectors line, reliability features, role chips, the verified chain, the inspection checks, and the CTA buttons.
 - `prefers-reduced-motion` skips the word split and keeps the plain fades.
@@ -69,6 +70,7 @@ DOM positions such as the road top, road edges, milestones, the live tag and the
 - Pearl-white paint with a deep clearcoat and a faint thin-film flop, applied to painted surfaces only.
 - Matrix projector lamps, an L-shaped DRL signature, and a full-width LED light blade front and rear.
 - Satin-metal accents: window surround, roof rails and frame, sill blade, door garnish, front bar, lower lip, intake blades and a finned diffuser.
+- A full-width black roof with black rails and a low-sheen finish, so the top view reads black like the reference MPV.
 - Piano-black pillars, a privacy-tinted rear cabin, panes with a sky gradient, and a dark panoramic roof.
 - Flush handles with shut-lines, a charge-port flap, parking-sensor dots, and hood character lines.
 - 10-twin-spoke two-tone rims with a polished lip on low-profile tyres (tread and sidewall texture), large discs and graphite calipers.
