@@ -235,6 +235,20 @@ let lastTime = performance.now();
 let speed = 0;
 let tl = null;
 let lastKey = '';
+// 3D rail cards: GSAP tweens `in` (entrance 0..1); frame() composes the full transform every tick
+let railCards = [];
+// scroll velocity drives a gentle skew on the moving type and rails; it decays when scrolling stops
+let scrollVel = 0;
+let skew = 0;
+const skewTargets = ['#ghost', '#ghost2', '#cards', '#cards2', '.flow'];
+const streaks = document.getElementById('streaks');
+// pointer tilt for the 3D cards (smoothed each frame); stays at rest on touch-only devices
+const pointer = { x: 0, y: 0, sx: 0, sy: 0 };
+window.addEventListener('pointermove', (e) => {
+  if (e.pointerType === 'touch') return;
+  pointer.x = (e.clientX / window.innerWidth) * 2 - 1;
+  pointer.y = (e.clientY / window.innerHeight) * 2 - 1;
+}, { passive: true });
 
 const el = {
   speed: $('#speed'),
@@ -270,7 +284,7 @@ function resize() {
 
 // timeline map (seconds). The study starts once the car has stopped on the vertical road.
 const STUDY = 19.65;
-const TOTAL = STUDY + 4.1; // the last word reveal ends just after the pull-back
+const TOTAL = STUDY + 4.45; // the last word reveal and colour sweep end just after the pull-back
 const CRANE = [11, 11.95];
 const SCENES = [
   [0, 'SIDE ELEVATION'],
@@ -295,6 +309,29 @@ const SHOTS = [
   [STUDY + 3, 'SHOT 04', 'DOLLY IN'],
   [STUDY + 3.55, 'SHOT 05', 'PULL BACK'],
 ];
+
+// chapter navigator: one entry per scene plus the 3D study
+const CHAPTERS = [
+  [0, 'Intro'], [1, 'Platform'], [2, 'Promise'], [3, 'Services'], [5, 'Compass Nexus iQ'],
+  [8, 'Built for'], [9, 'Workflow'], [11.95, 'Live operations'], [12.75, 'Routing'], [13.95, 'Reliability'],
+  [14.95, 'Airport & intercity'], [15.95, 'Security & audit'], [17, 'Trip status'], [18.4, 'Verified'], [STUDY, '3D study'],
+];
+const chapterList = document.querySelector('#chapters ol');
+const chapterItems = CHAPTERS.map(([time, label], i) => {
+  const li = document.createElement('li');
+  const b = document.createElement('button');
+  b.type = 'button';
+  b.setAttribute('aria-label', `Chapter ${i + 1}: ${label}`);
+  const span = document.createElement('span');
+  span.textContent = `${String(i + 1).padStart(2, '0')} ${label.toUpperCase().replace('IQ', 'iQ')}`;
+  b.appendChild(span);
+  // land just after the chapter starts, once its copy has revealed
+  b.addEventListener('click', () => window.__cniq.seek(time + 0.35, true));
+  li.appendChild(b);
+  chapterList.appendChild(li);
+  return li;
+});
+let activeChapter = -1;
 
 function updateHud(t, kmh) {
   el.speed.textContent = String(Math.round(kmh)).padStart(2, '0');
@@ -322,6 +359,62 @@ function updateHud(t, kmh) {
   const mm = Math.round(12 / Math.tan((rig.fov * DEG) / 2));
   el.lens.textContent = `LENS ${mm}MM · TILT ${String(Math.round(rig.elev)).padStart(2, '0')}°`;
   el.rail.style.transform = `scaleX(${Math.min(1, t / TOTAL).toFixed(4)})`;
+  let ch = 0;
+  for (let j = 0; j < CHAPTERS.length; j++) if (t >= CHAPTERS[j][0] - 0.05) ch = j;
+  if (ch !== activeChapter) {
+    activeChapter = ch;
+    chapterItems.forEach((li, j) => {
+      li.classList.toggle('active', j === ch);
+      li.classList.toggle('passed', j < ch);
+    });
+  }
+}
+
+function updateScrollFx(dt) {
+  // speed streaks only in the side elevation, sliding with the car
+  const side = Math.max(0, 1 - rig.elev / 8);
+  const on = side * Math.min(1, speed / 55);
+  streaks.style.opacity = (on * 0.9).toFixed(3);
+  if (on > 0.001) streaks.style.setProperty('--sx', `${(-(rig.s * 46) % 70000).toFixed(1)}px`);
+  if (reduceMotion) return;
+  scrollVel *= Math.pow(0.02, dt); // decays to rest within about a second
+  const target = Math.max(-7, Math.min(7, -scrollVel / 260));
+  const next = skew + (target - skew) * Math.min(1, dt * 7);
+  if (Math.abs(next - skew) > 0.005 || Math.abs(next) > 0.005) {
+    skew = Math.abs(next) < 0.005 ? 0 : next;
+    gsap.set(skewTargets, { skewX: skew });
+  }
+}
+
+// Cards bend like a curved wall around the screen centre: they turn toward the viewer,
+// sink back in depth toward the edges, and a sheen sweeps across the glass as they pass.
+function updateCards3d(narrow) {
+  const half = W / 2;
+  const maxY = narrow ? 16 : 26;
+  const depth = narrow ? 90 : 170;
+  pointer.sx += (pointer.x - pointer.sx) * 0.08;
+  pointer.sy += (pointer.y - pointer.sy) * 0.08;
+  const now = performance.now() / 1000;
+  let i = 0;
+  for (const c of railCards) {
+    i++;
+    if (c.rail.style.visibility === 'hidden') continue;
+    const x = gsap.getProperty(c.rail, 'x');
+    const cx = c.el.offsetLeft + c.el.offsetWidth / 2 + x;
+    const n = Math.max(-1.5, Math.min(1.5, (cx - half) / half));
+    const a = Math.abs(n);
+    const e = 1 - c.in; // entrance remainder
+    const focus = Math.max(0, 1 - a); // the card nearest the centre reacts most to the pointer
+    const float = reduceMotion ? 0 : Math.sin(now * 1.3 + i * 0.9) * 4 * c.in;
+    const ry = -n * maxY + e * 34 + pointer.sx * 9 * focus;
+    const rx = e * -26 - pointer.sy * 7 * focus;
+    const tz = -Math.pow(a, 1.4) * depth - e * 160 + focus * 26;
+    const ty = e * 90 + a * a * 10 + float;
+    c.el.style.transform = `perspective(1100px) translate3d(0, ${ty.toFixed(1)}px, ${tz.toFixed(1)}px) rotateY(${ry.toFixed(2)}deg) rotateX(${rx.toFixed(2)}deg)`;
+    c.el.style.setProperty('--sheen', `${(50 - n * 70 - pointer.sx * 18 * focus).toFixed(1)}%`);
+    c.el.style.setProperty('--rim', (focus * focus * c.in).toFixed(3));
+    c.el.style.setProperty('--shade', (Math.min(1, a) * 0.42 + e * 0.3).toFixed(3));
+  }
 }
 
 const scr = { x: 0, y: 0, z: 0 };
@@ -424,6 +517,8 @@ function frame() {
   const ang = Math.atan2(scr2.y - scr.y, scr2.x - scr.x) / DEG;
   el.needle.style.transform = `rotate(${ang.toFixed(1)}deg)`;
 
+  updateCards3d(narrow);
+  updateScrollFx(dt);
   updateHud(tl ? tl.time() : 0, speed);
 
   // render only when something visible changed
@@ -437,6 +532,7 @@ function frame() {
 
 // ---------------------------------------------------------------- timeline
 function buildTimeline(L) {
+  railCards = [];
   Object.assign(rig, {
     s: S0, elev: 0, azim: 0, fov: 9, vw: L.vw0, follow: 1, fx: L.curveFx, fz: L.curveFz,
     ty: 0.45, ay: 0, edge: 1, sx: 0.5, sy: L.sy0, wheel: 0, fade: 4000, drl: 1.1, brake: 0,
@@ -451,6 +547,7 @@ function buildTimeline(L) {
       end: 'bottom bottom',
       scrub: reduceMotion || params.has('noscrub') ? true : 1,
       invalidateOnRefresh: true,
+      onUpdate: (self) => { scrollVel = self.getVelocity(); },
     },
   });
 
@@ -510,6 +607,14 @@ function buildTimeline(L) {
     // word-mask reveal on titles
     const words = $$(`${sel} .wi`);
     if (words.length) t.fromTo(words, { yPercent: 115, rotate: 5 }, { yPercent: 0, rotate: 0, duration: 0.32, stagger: 0.03, ease: 'power3.out' }, at + 0.02);
+    // colour type on paper: the gradient sweeps through the second line, the eyebrow tracks in
+    const onPaper = !$(sel)?.classList.contains('on-road');
+    if (onPaper) {
+      const inks = $$(`${sel} .dim .wi`);
+      if (inks.length) t.fromTo(inks, { backgroundPosition: '100% 0%' }, { backgroundPosition: '0% 0%', duration: 0.7, stagger: 0.05, ease: 'power2.out' }, at + 0.06);
+      const eb = $$(`${sel} .eyebrow`);
+      if (eb.length) t.fromTo(eb, { letterSpacing: '0.62em' }, { letterSpacing: '0.14em', duration: 0.4, ease: 'expo.out' }, at);
+    }
     // icons draw themselves
     const shapes = $$(`${sel} .svc .draw, ${sel} .panel .draw`);
     if (shapes.length) t.fromTo(shapes, { strokeDashoffset: 1 }, { strokeDashoffset: 0, duration: 0.4, stagger: 0.02, ease: 'power1.inOut' }, at + 0.06);
@@ -519,7 +624,7 @@ function buildTimeline(L) {
     }
     const panel = $(`${sel} .panel`);
     if (panel) {
-      t.fromTo(panel, { autoAlpha: 0, scale: 0.985, clipPath: 'inset(0% 0% 100% 0%)' }, { autoAlpha: 1, scale: 1, clipPath: 'inset(0% 0% 0% 0%)', duration: 0.26, ease: 'power3.out' }, at);
+      t.fromTo(panel, { autoAlpha: 0, scale: 0.96, rotateY: 14, rotateX: 6, transformPerspective: 1200, transformOrigin: '0% 50%', clipPath: 'inset(0% 0% 100% 0%)' }, { autoAlpha: 1, scale: 1, rotateY: 0, rotateX: 0, clipPath: 'inset(0% 0% 0% 0%)', duration: 0.34, ease: 'power3.out' }, at);
       if (out != null) t.to(panel, { autoAlpha: 0, duration: 0.18, ease: 'power2.in' }, out + 0.04);
     }
   };
@@ -557,7 +662,11 @@ function buildTimeline(L) {
   const rail = (sel, meter, at, d) => {
     const cards = $$(`${sel} .card`);
     t.fromTo(sel, { x: () => window.innerWidth * 0.3 }, { x: () => -Math.max(0, $(sel).scrollWidth - window.innerWidth * 0.86), duration: d }, at);
-    t.fromTo(cards, { autoAlpha: 0, y: 70, rotateX: -24, transformPerspective: 900 }, { autoAlpha: 1, y: 0, rotateX: 0, duration: 0.42, stagger: d / (cards.length + 2), ease: 'power3.out' }, at + 0.04);
+    const states = cards.map((el) => ({ el, rail: $(sel), in: 0 }));
+    railCards.push(...states);
+    const st = d / (cards.length + 2);
+    t.fromTo(cards, { autoAlpha: 0 }, { autoAlpha: 1, duration: 0.3, stagger: st, ease: 'power1.out' }, at + 0.04);
+    t.fromTo(states, { in: 0 }, { in: 1, duration: 0.55, stagger: st, ease: 'expo.out' }, at + 0.04);
     t.fromTo($$(`${sel} .draw`), { strokeDashoffset: 1 }, { strokeDashoffset: 0, duration: 0.45, stagger: d / (cards.length * 3), ease: 'power1.inOut' }, at + 0.12);
     t.fromTo(`${sel} .tags span`, { autoAlpha: 0, x: -8 }, { autoAlpha: 1, x: 0, duration: 0.2, stagger: d / (cards.length * 3), ease: 'power2.out' }, at + 0.25);
     t.fromTo(meter, { scaleX: 0 }, { scaleX: 1, duration: d * 0.92 }, at + 0.08);
@@ -580,6 +689,10 @@ function buildTimeline(L) {
   t.fromTo('#flowFill', { scaleX: 0 }, { scaleX: 1, duration: 1.45 }, 9.15);
   t.fromTo(flowItems, { autoAlpha: 0, y: 26 }, { autoAlpha: 1, y: 0, duration: 0.24, stagger: 1.45 / flowItems.length, ease: 'power2.out' }, 9.12);
   step(flowItems, 9.15, 1.45);
+  // crane-up: a gold scan line sweeps up the screen as the camera rises
+  t.to('#scan', { autoAlpha: 1, duration: 0.06 }, 11.02)
+    .fromTo('#scan', { y: () => window.innerHeight }, { y: -24, duration: 0.9, ease: 'power2.inOut' }, 11.02)
+    .to('#scan', { autoAlpha: 0, duration: 0.1 }, 11.84);
   reveal('.s6', 11.95, 12.65);
   show('#liveTag', 11.97, 13.6);
   reveal('.s7', 12.95, 13.6);
@@ -587,6 +700,8 @@ function buildTimeline(L) {
   reveal('.s8', 13.95, 14.85);
   t.fromTo('.s8 .feat li', { autoAlpha: 0, x: -16 }, { autoAlpha: 1, x: 0, duration: 0.2, stagger: 0.05, ease: 'power2.out' }, 14.1);
   reveal('.s9', 14.95, 15.85);
+  t.fromTo('.s9 .svc', { rotateY: -72, z: -120, transformPerspective: 1000, transformOrigin: '0% 50%' }, { rotateY: 0, z: 0, duration: 0.4, stagger: 0.12, ease: 'power3.out' }, 14.95)
+    .to('.s9 .svc', { rotateY: 60, transformOrigin: '100% 50%', duration: 0.2, stagger: 0.04, ease: 'power2.in' }, 15.85);
   reveal('.s9b', 15.95, 16.9);
   t.fromTo('.roles li', { autoAlpha: 0, scale: 0.8, y: 10 }, { autoAlpha: 1, scale: 1, y: 0, duration: 0.18, stagger: 0.04, ease: 'back.out(2)' }, 16.08);
   // 13 · trip status steps from Scheduled to Billed as the car drives
@@ -606,6 +721,45 @@ function buildTimeline(L) {
   t.set({}, {}, TOTAL);
   return t;
 }
+
+// ---------------------------------------------------------------- colour editions
+// One vehicle, five paints. The body shader and the painted parts share the colour.
+const EDITIONS = {
+  // env: how much of the white studio the paint mirrors; darker paints mirror less so they read true
+  pearl: { name: 'Pearl White', hex: 0xf2f1ed, env: 1 },
+  cosmos: { name: 'Cosmos Black', hex: 0x08090a, env: 0.22 },
+  graphite: { name: 'Graphite Grey', hex: 0x3e4146, env: 0.45 },
+  harbour: { name: 'Harbour Blue', hex: 0x15306a, env: 0.45 },
+  champagne: { name: 'Champagne Gold', hex: 0xb39b74, env: 0.8 },
+};
+const paintTarget = new THREE.Color();
+function setEdition(id, animate = true) {
+  const ed = EDITIONS[id] || EDITIONS.pearl;
+  paintTarget.setHex(ed.hex);
+  const targets = [vehicle.uniforms.uBody.value, vehicle.materials.paint.color];
+  gsap.to(targets, {
+    r: paintTarget.r, g: paintTarget.g, b: paintTarget.b,
+    duration: animate && !reduceMotion ? 0.9 : 0,
+    ease: 'power2.inOut',
+    overwrite: true,
+    onUpdate: () => { lastKey = ''; },
+    onComplete: () => { lastKey = ''; },
+  });
+  gsap.to([vehicle.materials.body, vehicle.materials.paint], {
+    envMapIntensity: ed.env,
+    duration: animate && !reduceMotion ? 0.9 : 0,
+    ease: 'power2.inOut',
+    overwrite: true,
+  });
+  $('#edName').textContent = ed.name;
+  $$('#editions button').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.ed === id)));
+  try { localStorage.setItem('cniq-edition', id); } catch (err) { /* storage unavailable */ }
+}
+$$('#editions button').forEach((b) => b.addEventListener('click', () => setEdition(b.dataset.ed)));
+let savedEdition = 'pearl';
+try { savedEdition = localStorage.getItem('cniq-edition') || 'pearl'; } catch (err) { /* storage unavailable */ }
+const urlEdition = params.get('edition');
+setEdition(EDITIONS[urlEdition] ? urlEdition : savedEdition, false);
 
 // ---------------------------------------------------------------- boot
 // split every title into masked words (keeps <br>, .dim and .iq spans intact)
@@ -632,7 +786,16 @@ function splitWords(node) {
     }
   }
 }
-if (!reduceMotion) $$('.story .title').forEach(splitWords);
+if (!reduceMotion) {
+  $$('.story .title, .s1 .display').forEach(splitWords);
+  root.classList.add('split');
+}
+$$('.card').forEach((card) => {
+  const sheen = document.createElement('i');
+  sheen.className = 'sheen';
+  sheen.setAttribute('aria-hidden', 'true');
+  card.appendChild(sheen);
+});
 $$('.card svg *, .svc svg *, .panel svg *').forEach((shape) => {
   if (shape.tagName === 'g') return;
   shape.setAttribute('pathLength', '1');
@@ -654,14 +817,26 @@ gsap.ticker.add(frame);
 frame();
 requestAnimationFrame(() => root.classList.add('ready'));
 
+// hero intro on load: words rise in, the brand and the location line follow, then the gold line shimmers
+if (!reduceMotion) {
+  const intro = gsap.timeline({ delay: 0.25 });
+  intro.fromTo('.s1 .display .wi', { yPercent: 115, rotate: 6 }, { yPercent: 0, rotate: 0, duration: 1.1, stagger: 0.09, ease: 'expo.out' })
+    .fromTo('.s1 .brand > *', { autoAlpha: 0, y: 16 }, { autoAlpha: 1, y: 0, duration: 0.7, stagger: 0.08, ease: 'power3.out' }, 0.1)
+    .fromTo('.s1 .grad .wi', { backgroundPosition: '100% 0%' }, { backgroundPosition: '0% 0%', duration: 1.6, stagger: 0.12, ease: 'power2.inOut' }, 0.35)
+    .fromTo('.s1-foot > *', { autoAlpha: 0, y: 14 }, { autoAlpha: 1, y: 0, duration: 0.7, stagger: 0.1, ease: 'power2.out' }, 0.6);
+  gsap.to('.s1 .grad .wi', { backgroundPosition: '100% 0%', duration: 3.2, ease: 'sine.inOut', repeat: -1, yoyo: true, delay: 2.4 });
+}
+
 // debug hook for automated checks: window.__cniq.seek(timelineSeconds)
 window.__cniq = {
   rig,
+  vehicle,
+  setEdition,
   get timeline() { return tl; },
-  seek(time) {
+  seek(time, smooth = false) {
     const st = tl && tl.scrollTrigger;
     if (!st) return;
     const y = st.start + (st.end - st.start) * (time / tl.duration());
-    window.scrollTo(0, y);
+    window.scrollTo({ top: y, behavior: smooth && !reduceMotion ? 'smooth' : 'auto' });
   },
 };
