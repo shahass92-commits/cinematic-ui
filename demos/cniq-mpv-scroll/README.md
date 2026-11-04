@@ -2,8 +2,8 @@
 
 A GSAP + Three.js scroll experience for **Compass Nexus iQ (CNIQ)**. One white premium MPV drives a long dark mat road through:
 
-- **Scenes 01–05 · side elevation.** The mat rises under the car, ghost type passes behind it, and the copy sits on the road.
-- **Scenes 06–10 · plan view.** A crane-up turns the elevation into a top shot. The car takes a bend, then runs down a vertical road where trip milestones light up as it passes.
+- **Scenes 01–06 · side elevation.** The mat rises under the car, ghost type passes behind it, and the copy sits on the road. Two premium glass card rails slide across the mat while the car keeps driving: six services, then eight Compass Nexus iQ platform modules (compassnai.com), each with a scrubbed progress meter.
+- **Scenes 07–12 · plan view.** A crane-up turns the elevation into a top shot. The car takes a bend, then runs a long vertical road where eight trip milestones (booking → payment) light up as it passes.
 - **Camera study · 3D.** The same vehicle under a free camera: crane down, a 180° arc, a low-angle hero, a dolly-in to the wheel, and a pull-back.
 
 Every scene uses one procedural vehicle model, so side, top and 3D views stay consistent.
@@ -28,7 +28,7 @@ URL flags:
 |------|--------|
 | `?noscrub` | Scroll maps 1:1 to the timeline with no smoothing (useful for screenshots and QA) |
 
-For automated checks, `window.__cniq.seek(t)` scrolls to timeline second `t` (0–14).
+For automated checks, `window.__cniq.seek(t)` scrolls to timeline second `t` (0–20.15). The scroll track is 28 viewports tall (about 1.4 viewports per timeline second).
 
 ## Files
 

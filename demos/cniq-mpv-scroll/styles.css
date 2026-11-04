@@ -81,6 +81,7 @@ body {
 .display { font-size: clamp(34px, 5.4vw, 88px); line-height: 0.96; }
 .title { font-size: clamp(30px, 4.3vw, 70px); line-height: 0.98; }
 .dim { color: var(--ink-2); }
+.iq { text-transform: none; }
 .on-road .dim { color: rgba(244, 244, 242, 0.42); }
 .eyebrow {
   font-family: var(--mono);
@@ -144,17 +145,80 @@ body {
 }
 .s5 .sectors i { font-style: normal; color: rgba(244, 244, 242, 0.3); font-weight: 600; }
 
-.s4 { padding: calc(var(--road-top) + 6vh) 0 0; }
-.s4 .eyebrow { padding-left: var(--gutter); }
-.cards { display: flex; gap: clamp(20px, 3vw, 48px); padding-left: var(--gutter); will-change: transform; }
-.card {
-  flex: 0 0 clamp(230px, 24vw, 330px);
-  border-left: 1px solid var(--hair-mat);
-  padding: 4px 0 4px 22px;
+.s4, .s4b { padding: calc(var(--road-top) + 5.5vh) 0 0; }
+
+/* rail header: title on the left, scrubbed progress meter on the right */
+.rail-head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 24px;
+  padding: 0 var(--gutter);
+  margin-bottom: clamp(18px, 3.2vh, 34px);
 }
+.rail-head .eyebrow { margin-bottom: 12px; }
+.rail-title { font-size: clamp(24px, 2.9vw, 48px); line-height: 1; }
+.meter { display: flex; align-items: center; gap: 12px; font-family: var(--mono); font-size: 10.5px; letter-spacing: 0.14em; color: var(--on-mat-2); padding-bottom: 6px; }
+.meter i { position: relative; display: block; width: clamp(80px, 10vw, 150px); height: 1px; background: var(--hair-mat); }
+.meter b { position: absolute; inset: 0; background: linear-gradient(90deg, var(--gold), #e2c792); transform-origin: left; transform: scaleX(0); }
+
+/* premium smoked-glass cards riding on the mat */
+.cards { display: flex; gap: clamp(14px, 1.5vw, 22px); padding-left: var(--gutter); will-change: transform; }
+.card {
+  position: relative;
+  flex: 0 0 clamp(248px, 21vw, 318px);
+  display: flex;
+  flex-direction: column;
+  padding: 20px 22px 20px;
+  border-radius: 14px;
+  background:
+    radial-gradient(120% 80% at 0% 0%, rgba(184, 149, 90, 0.10), transparent 55%),
+    linear-gradient(165deg, rgba(255, 255, 255, 0.085), rgba(255, 255, 255, 0.02) 52%, rgba(255, 255, 255, 0.035));
+  border: 1px solid rgba(255, 255, 255, 0.11);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.09),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.35),
+    0 34px 60px -34px rgba(0, 0, 0, 0.75);
+  overflow: hidden;
+}
+.card::before {
+  content: "";
+  position: absolute;
+  left: 18px;
+  right: 18px;
+  top: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(226, 199, 146, 0.85), transparent);
+}
+.card::after {
+  content: "";
+  position: absolute;
+  right: -40px;
+  bottom: -40px;
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  box-shadow: 0 0 0 18px rgba(255, 255, 255, 0.015), 0 0 0 38px rgba(255, 255, 255, 0.01);
+}
+.card .idx { display: flex; justify-content: space-between; font-family: var(--mono); font-size: 10px; letter-spacing: 0.16em; color: var(--gold); }
+.card .idx span + span { color: rgba(244, 244, 242, 0.32); }
 .card svg, .svc svg { width: 30px; height: 30px; fill: none; stroke: currentColor; stroke-width: 1.4; stroke-linecap: round; stroke-linejoin: round; }
-.card h3 { font-size: 15px; letter-spacing: 0.03em; margin: 18px 0 8px; }
-.card p { margin: 0; font-size: 13.5px; color: var(--on-mat-2); max-width: 30ch; }
+.card svg { margin-top: 18px; color: #f4efe4; }
+.card h3 { font-size: 15.5px; letter-spacing: 0.03em; margin: 16px 0 8px; }
+.card p { margin: 0; font-size: 13.25px; line-height: 1.5; color: var(--on-mat-2); }
+.card .tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: auto; padding-top: 16px; }
+.card .tags span {
+  font-family: var(--mono);
+  font-size: 9.5px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 4px 9px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.13);
+  background: rgba(255, 255, 255, 0.03);
+  color: rgba(244, 244, 242, 0.7);
+}
 
 /* ---------- overhead scenes ---------- */
 .s6 { position: absolute; left: var(--gutter); right: var(--gutter); top: auto; bottom: 7vh; inset-inline: var(--gutter); height: auto; }
@@ -195,6 +259,21 @@ body {
 .svc .hex path:first-child { stroke-width: 1.3; }
 .svc h3 { font-size: clamp(22px, 2.2vw, 32px); line-height: 1.02; margin: 16px 0 10px; }
 .svc p { margin: 0; color: #3c3c3c; font-size: clamp(14px, 1.15vw, 16.5px); }
+
+.roles { list-style: none; margin: 28px 0 0; padding: 0; display: flex; flex-wrap: wrap; gap: 8px; max-width: 44ch; }
+.roles li {
+  font-family: var(--mono);
+  font-size: 10.5px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  padding: 7px 12px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.7);
+  border: 1px solid var(--hair);
+  box-shadow: inset 0 1px 0 #fff, 0 10px 24px -18px rgba(0, 0, 0, 0.5);
+}
+.roles li:first-child { border-color: var(--gold); color: #7a5f30; }
+.s9b .lede { max-width: 40ch; }
 
 .chain { list-style: none; padding: 0; margin: 30px 0 0; display: flex; flex-wrap: wrap; gap: 8px 0; font-family: var(--mono); font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; }
 .chain li { display: inline-flex; align-items: center; }
@@ -314,7 +393,11 @@ body {
   .s2, .s3, .s5 { padding-top: calc(var(--road-top) + 5vh); }
   .title { font-size: clamp(28px, 8.4vw, 48px); }
   .lede { font-size: 14px; }
-  .card { flex-basis: 74vw; }
+  .s4, .s4b { padding-top: calc(var(--road-top) + 4vh); }
+  .rail-head { flex-direction: column; align-items: flex-start; gap: 12px; margin-bottom: 18px; }
+  .rail-title { font-size: clamp(22px, 6.6vw, 34px); }
+  .card { flex-basis: 72vw; padding: 18px 18px 18px; }
+  .card p { font-size: 12.75px; }
   .s6 { bottom: 5vh; }
   .s7 { bottom: 7vh; width: 70vw; }
   .s7 .title, .s6 .title { font-size: clamp(26px, 7.6vw, 40px); }
@@ -326,7 +409,10 @@ body {
   .svc svg { width: 36px; height: 36px; }
   .svc h3 { font-size: clamp(18px, 5.4vw, 26px); }
   .svc p { font-size: 13px; }
-  .s10 .title { font-size: clamp(20px, 6vw, 34px); }
+  .s10 .title, .s9b .title { font-size: clamp(20px, 6vw, 34px); }
+  .roles { gap: 5px; margin-top: 16px; }
+  .roles li { font-size: 8.5px; padding: 5px 8px; }
+  .s9b .lede { font-size: 12.5px; }
   .s10 .lede { font-size: 12.5px; }
   .chain { font-size: 9.5px; flex-direction: column; gap: 6px; }
   .chain li + li::before { width: 12px; margin: 0 8px 0 0; }
