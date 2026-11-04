@@ -52,6 +52,10 @@ Everything is one scrubbed master timeline, so every effect plays forward and ba
 - **Colour type on the white sections:** the second line of each title on paper is a blue → gold gradient that sweeps through as the words rise, and eyebrows track in from wide letter-spacing. The hero title has its own load intro and a slow gold shimmer.
 - **3D cards, premium pass:** card content floats at different depths (preserve-3d), the centre card follows the pointer with a gold rim light, and cards bob gently.
 - **Colour editions:** a picker switches the same vehicle between Pearl White, Cosmos Black, Graphite Grey, Harbour Blue and Champagne Gold (paint and studio reflection tween together). The choice is remembered per viewer; `?edition=cosmos` sets it from the URL.
+- **Speed streaks:** light streaks slide across the mat with the car in the side elevation; their strength follows the speed readout.
+- **Velocity skew:** ScrollTrigger's scroll velocity slants the ghost type, the card rails and the workflow line while you scroll fast, then they settle.
+- **Crane-up scan line:** a gold line sweeps up the screen as the camera rises from elevation to plan.
+- **Chapter navigator:** a dot rail on the right fills as you scroll; each dot shows its chapter on hover and smooth-scrolls there on click (hidden on phones).
 - `prefers-reduced-motion` skips the word split and keeps the plain fades.
 
 ## How the camera works

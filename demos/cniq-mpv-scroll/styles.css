@@ -571,6 +571,95 @@ body {
 .ed-swatches button[aria-pressed="true"] { box-shadow: 0 0 0 2px var(--paper), 0 0 0 3.5px var(--gold), inset 0 -3px 6px rgba(0, 0, 0, 0.25); }
 .ed-swatches button:focus-visible { outline: 2px solid var(--blue); outline-offset: 3px; }
 
+/* ---------- premium scroll effects ---------- */
+.streaks {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: calc(var(--road-top) + 3px);
+  bottom: 0;
+  pointer-events: none;
+  opacity: 0;
+  --sx: 0px;
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 18%, #000 82%, transparent);
+  mask-image: linear-gradient(90deg, transparent, #000 18%, #000 82%, transparent);
+}
+.streaks i {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: repeating-linear-gradient(90deg, transparent 0 260px, rgba(255, 255, 255, 0.0) 260px, rgba(244, 238, 226, 0.16) 330px, rgba(255, 255, 255, 0) 420px, transparent 420px 700px);
+  background-position: calc(var(--sx) * var(--k)) 0;
+}
+.scan {
+  position: fixed;
+  z-index: 5;
+  left: 0;
+  right: 0;
+  top: 0;
+  height: 2px;
+  pointer-events: none;
+  background: linear-gradient(90deg, transparent, rgba(226, 199, 146, 0.95) 22%, #fff3dc 50%, rgba(226, 199, 146, 0.95) 78%, transparent);
+  box-shadow: 0 0 18px 2px rgba(226, 199, 146, 0.55), 0 40px 90px 30px rgba(226, 199, 146, 0.08);
+  opacity: 0;
+  visibility: hidden;
+}
+.chapters {
+  position: fixed;
+  z-index: 6;
+  right: calc(var(--gutter) - 4px);
+  top: 50%;
+  transform: translateY(-50%);
+  mix-blend-mode: difference;
+  color: #fff;
+}
+.chapters ol { list-style: none; margin: 0; padding: 0; display: grid; gap: 9px; }
+.chapters button {
+  position: relative;
+  display: block;
+  width: 18px;
+  height: 10px;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+  color: inherit;
+}
+.chapters button::before {
+  content: "";
+  position: absolute;
+  right: 0;
+  top: 4px;
+  width: 8px;
+  height: 1.5px;
+  background: currentColor;
+  opacity: 0.4;
+  transform-origin: right;
+  transition: width 0.35s ease, opacity 0.35s ease;
+}
+.chapters li.passed button::before { opacity: 0.85; }
+.chapters li.active button::before { width: 18px; opacity: 1; }
+.chapters button span {
+  position: absolute;
+  right: 28px;
+  top: 50%;
+  transform: translate(6px, -50%);
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s ease, transform 0.25s ease;
+}
+.chapters button:hover span,
+.chapters button:focus-visible span { opacity: 1; transform: translate(0, -50%); }
+.chapters button:focus-visible { outline: 1px solid currentColor; outline-offset: 3px; }
+@media (max-aspect-ratio: 1/1), (max-height: 620px) {
+  .chapters { display: none; }
+}
+
 @media (max-aspect-ratio: 1/1) {
   .editions { bottom: 58px; gap: 8px; padding: 6px 6px 6px 12px; }
   .ed-label { display: none; }

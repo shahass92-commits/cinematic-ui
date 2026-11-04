@@ -237,6 +237,11 @@ let tl = null;
 let lastKey = '';
 // 3D rail cards: GSAP tweens `in` (entrance 0..1); frame() composes the full transform every tick
 let railCards = [];
+// scroll velocity drives a gentle skew on the moving type and rails; it decays when scrolling stops
+let scrollVel = 0;
+let skew = 0;
+const skewTargets = ['#ghost', '#ghost2', '#cards', '#cards2', '.flow'];
+const streaks = document.getElementById('streaks');
 // pointer tilt for the 3D cards (smoothed each frame); stays at rest on touch-only devices
 const pointer = { x: 0, y: 0, sx: 0, sy: 0 };
 window.addEventListener('pointermove', (e) => {
@@ -305,6 +310,29 @@ const SHOTS = [
   [STUDY + 3.55, 'SHOT 05', 'PULL BACK'],
 ];
 
+// chapter navigator: one entry per scene plus the 3D study
+const CHAPTERS = [
+  [0, 'Intro'], [1, 'Platform'], [2, 'Promise'], [3, 'Services'], [5, 'Compass Nexus iQ'],
+  [8, 'Built for'], [9, 'Workflow'], [11.95, 'Live operations'], [12.75, 'Routing'], [13.95, 'Reliability'],
+  [14.95, 'Airport & intercity'], [15.95, 'Security & audit'], [17, 'Trip status'], [18.4, 'Verified'], [STUDY, '3D study'],
+];
+const chapterList = document.querySelector('#chapters ol');
+const chapterItems = CHAPTERS.map(([time, label], i) => {
+  const li = document.createElement('li');
+  const b = document.createElement('button');
+  b.type = 'button';
+  b.setAttribute('aria-label', `Chapter ${i + 1}: ${label}`);
+  const span = document.createElement('span');
+  span.textContent = `${String(i + 1).padStart(2, '0')} ${label.toUpperCase().replace('IQ', 'iQ')}`;
+  b.appendChild(span);
+  // land just after the chapter starts, once its copy has revealed
+  b.addEventListener('click', () => window.__cniq.seek(time + 0.35, true));
+  li.appendChild(b);
+  chapterList.appendChild(li);
+  return li;
+});
+let activeChapter = -1;
+
 function updateHud(t, kmh) {
   el.speed.textContent = String(Math.round(kmh)).padStart(2, '0');
   let no;
@@ -331,6 +359,31 @@ function updateHud(t, kmh) {
   const mm = Math.round(12 / Math.tan((rig.fov * DEG) / 2));
   el.lens.textContent = `LENS ${mm}MM · TILT ${String(Math.round(rig.elev)).padStart(2, '0')}°`;
   el.rail.style.transform = `scaleX(${Math.min(1, t / TOTAL).toFixed(4)})`;
+  let ch = 0;
+  for (let j = 0; j < CHAPTERS.length; j++) if (t >= CHAPTERS[j][0] - 0.05) ch = j;
+  if (ch !== activeChapter) {
+    activeChapter = ch;
+    chapterItems.forEach((li, j) => {
+      li.classList.toggle('active', j === ch);
+      li.classList.toggle('passed', j < ch);
+    });
+  }
+}
+
+function updateScrollFx(dt) {
+  // speed streaks only in the side elevation, sliding with the car
+  const side = Math.max(0, 1 - rig.elev / 8);
+  const on = side * Math.min(1, speed / 55);
+  streaks.style.opacity = (on * 0.9).toFixed(3);
+  if (on > 0.001) streaks.style.setProperty('--sx', `${(-(rig.s * 46) % 70000).toFixed(1)}px`);
+  if (reduceMotion) return;
+  scrollVel *= Math.pow(0.02, dt); // decays to rest within about a second
+  const target = Math.max(-7, Math.min(7, -scrollVel / 260));
+  const next = skew + (target - skew) * Math.min(1, dt * 7);
+  if (Math.abs(next - skew) > 0.005 || Math.abs(next) > 0.005) {
+    skew = Math.abs(next) < 0.005 ? 0 : next;
+    gsap.set(skewTargets, { skewX: skew });
+  }
 }
 
 // Cards bend like a curved wall around the screen centre: they turn toward the viewer,
@@ -465,6 +518,7 @@ function frame() {
   el.needle.style.transform = `rotate(${ang.toFixed(1)}deg)`;
 
   updateCards3d(narrow);
+  updateScrollFx(dt);
   updateHud(tl ? tl.time() : 0, speed);
 
   // render only when something visible changed
@@ -493,6 +547,7 @@ function buildTimeline(L) {
       end: 'bottom bottom',
       scrub: reduceMotion || params.has('noscrub') ? true : 1,
       invalidateOnRefresh: true,
+      onUpdate: (self) => { scrollVel = self.getVelocity(); },
     },
   });
 
@@ -634,6 +689,10 @@ function buildTimeline(L) {
   t.fromTo('#flowFill', { scaleX: 0 }, { scaleX: 1, duration: 1.45 }, 9.15);
   t.fromTo(flowItems, { autoAlpha: 0, y: 26 }, { autoAlpha: 1, y: 0, duration: 0.24, stagger: 1.45 / flowItems.length, ease: 'power2.out' }, 9.12);
   step(flowItems, 9.15, 1.45);
+  // crane-up: a gold scan line sweeps up the screen as the camera rises
+  t.to('#scan', { autoAlpha: 1, duration: 0.06 }, 11.02)
+    .fromTo('#scan', { y: () => window.innerHeight }, { y: -24, duration: 0.9, ease: 'power2.inOut' }, 11.02)
+    .to('#scan', { autoAlpha: 0, duration: 0.1 }, 11.84);
   reveal('.s6', 11.95, 12.65);
   show('#liveTag', 11.97, 13.6);
   reveal('.s7', 12.95, 13.6);
@@ -774,10 +833,10 @@ window.__cniq = {
   vehicle,
   setEdition,
   get timeline() { return tl; },
-  seek(time) {
+  seek(time, smooth = false) {
     const st = tl && tl.scrollTrigger;
     if (!st) return;
     const y = st.start + (st.end - st.start) * (time / tl.duration());
-    window.scrollTo(0, y);
+    window.scrollTo({ top: y, behavior: smooth && !reduceMotion ? 'smooth' : 'auto' });
   },
 };
