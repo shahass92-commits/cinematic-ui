@@ -70,7 +70,7 @@ DOM positions such as the road top, road edges, milestones, the live tag and the
 - Pearl-white paint with a deep clearcoat and a faint thin-film flop, applied to painted surfaces only.
 - Matrix projector lamps, an L-shaped DRL signature, and a full-width LED light blade front and rear.
 - Satin-metal accents: window surround, roof rails and frame, sill blade, door garnish, front bar, lower lip, intake blades and a finned diffuser.
-- A full-width black roof with black rails and a low-sheen finish, so the top view reads black like the reference MPV.
+- A white roof with one minimal panoramic glass panel in the middle (satin frame and rails), and lighter grey-tinted side glass and windscreen instead of near-black.
 - Piano-black pillars, a privacy-tinted rear cabin, panes with a sky gradient, and a dark panoramic roof.
 - Flush handles with shut-lines, a charge-port flap, parking-sensor dots, and hood character lines.
 - 10-twin-spoke two-tone rims with a polished lip on low-profile tyres (tread and sidewall texture), large discs and graphite calipers.
