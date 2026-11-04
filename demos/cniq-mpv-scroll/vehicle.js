@@ -255,8 +255,8 @@ const ZONE_MAIN = /* glsl */ `
   // ---- glass, pillars and roof
   // minimal panoramic glass panel centred on a white roof (reads in the top view)
   float czTop = czAA(0.7, czN.y);
-  float czRoof = czTop * czBand(czP.x, -1.28, -0.04) * (1.0 - czAA(0.46, czZn));
-  float czRoofFrame = czTop * czBand(czP.x, -1.3, -0.02) * (1.0 - czAA(0.48, czZn)) * (1.0 - czRoof);
+  float czRoof = czTop * czBand(czP.x, -1.62, 0.14) * (1.0 - czAA(0.64, czZn));
+  float czRoofFrame = czTop * czBand(czP.x, -1.65, 0.17) * (1.0 - czAA(0.675, czZn)) * (1.0 - czRoof);
   czGlass = max(czGlass, czRoof);
   float czPillar = czSideBand * (1.0 - clamp(czPane, 0.0, 1.0)) * czSide;
   float czPrivacy = 1.0 - czAA(-0.11, czP.x);
@@ -314,8 +314,18 @@ const ZONE_MAIN = /* glsl */ `
   vec3 czPaneCol = mix(vec3(0.05, 0.057, 0.066), vec3(0.14, 0.16, 0.185), czSky) * mix(1.0, 0.82, czPrivacy);
   czCol = mix(czCol, czPaneCol, czPane * czGlass); czRough = mix(czRough, 0.42, czPane * czGlass);
   czCol = mix(czCol, vec3(0.002), czPillar); czRough = mix(czRough, 0.38, czPillar); czCC = mix(czCC, 0.0, czPillar);
-  vec3 czPanoCol = mix(vec3(0.05, 0.062, 0.075), vec3(0.15, 0.175, 0.2), smoothstep(-1.28, -0.04, czP.x) * 0.8 + czZn * 0.25);
-  czCol = mix(czCol, czPanoCol, czRoof); czRough = mix(czRough, 0.3, czRoof); czCC = mix(czCC, 0.18, czRoof); czCCR = mix(czCCR, 0.12, czRoof);
+  // cabin seen through the glass: floor, three seat rows (backrest + cushion), a centre aisle
+  float czSeatCol = czBand(czZn, 0.1, 0.56);
+  float czSeats = 0.0;
+  czSeats += czBand(czP.x, -0.32, 0.02) * czSeatCol;   // front row
+  czSeats += czBand(czP.x, -0.98, -0.6) * czSeatCol;   // middle row
+  czSeats += czBand(czP.x, -1.58, -1.24) * czBand(czZn, 0.06, 0.6); // rear bench
+  vec3 czCabin = mix(vec3(0.15, 0.145, 0.14), vec3(0.24, 0.225, 0.205), czSeats * 0.8);
+  czCabin *= 1.0 - 0.08 * czBand(czZn, 0.0, 0.08);
+  vec3 czTint = vec3(0.62, 0.72, 0.8);
+  float czSkyRef = smoothstep(-1.62, 0.14, czP.x) * 0.06 + czZn * 0.03;
+  vec3 czPanoCol = czCabin * czTint + czSkyRef;
+  czCol = mix(czCol, czPanoCol, czRoof); czRough = mix(czRough, 0.55, czRoof); czCC = mix(czCC, 0.1, czRoof); czCCR = mix(czCCR, 0.05, czRoof);
   czCol = mix(czCol, vec3(0.008, 0.009, 0.012), czLamp); czRough = mix(czRough, 0.05, czLamp); czCC = mix(czCC, 1.0, czLamp);
   czCol = mix(czCol, vec3(0.09, 0.004, 0.004), czTail); czRough = mix(czRough, 0.06, czTail); czCC = mix(czCC, 1.0, czTail);
   czCol = mix(czCol, vec3(0.2, 0.008, 0.008), czReflector);
