@@ -51,6 +51,7 @@ Everything is one scrubbed master timeline, so every effect plays forward and ba
 - **Smaller staggers:** the sectors line, reliability features, role chips, the verified chain, the inspection checks, and the CTA buttons.
 - **Colour type on the white sections:** the second line of each title on paper is a blue → gold gradient that sweeps through as the words rise, and eyebrows track in from wide letter-spacing. The hero title has its own load intro and a slow gold shimmer.
 - **3D cards, premium pass:** card content floats at different depths (preserve-3d), the centre card follows the pointer with a gold rim light, and cards bob gently.
+- **3D cards, third pass:** a holographic foil layer shifts with each card's angle and the pointer; cards fold away steeply at the screen edges like pages; each rail reflects faintly on the mat (`-webkit-box-reflect`); the airport and intercity cards flip in 3D to a back face mid-scene; the inspection checks deal in from above.
 - **Colour editions:** a picker switches the same vehicle between Pearl White, Cosmos Black, Graphite Grey, Harbour Blue and Champagne Gold (paint and studio reflection tween together). The choice is remembered per viewer; `?edition=cosmos` sets it from the URL.
 - **Speed streaks:** light streaks slide across the mat with the car in the side elevation; their strength follows the speed readout.
 - **Velocity skew:** ScrollTrigger's scroll velocity slants the ghost type, the card rails and the workflow line while you scroll fast, then they settle.

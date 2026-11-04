@@ -406,14 +406,19 @@ function updateCards3d(narrow) {
     const e = 1 - c.in; // entrance remainder
     const focus = Math.max(0, 1 - a); // the card nearest the centre reacts most to the pointer
     const float = reduceMotion ? 0 : Math.sin(now * 1.3 + i * 0.9) * 4 * c.in;
-    const ry = -n * maxY + e * 34 + pointer.sx * 9 * focus;
+    // cards fold away steeply as they reach the screen edges, like pages of a book
+    const fold = Math.min(1, Math.max(0, (a - 0.78) / 0.6));
+    const foldE = fold * fold * (3 - 2 * fold);
+    const ry = -n * maxY + e * 34 + pointer.sx * 9 * focus - Math.sign(n) * foldE * 42;
     const rx = e * -26 - pointer.sy * 7 * focus;
-    const tz = -Math.pow(a, 1.4) * depth - e * 160 + focus * 26;
+    const tz = -Math.pow(a, 1.4) * depth - e * 160 + focus * 26 - foldE * 110;
     const ty = e * 90 + a * a * 10 + float;
     c.el.style.transform = `perspective(1100px) translate3d(0, ${ty.toFixed(1)}px, ${tz.toFixed(1)}px) rotateY(${ry.toFixed(2)}deg) rotateX(${rx.toFixed(2)}deg)`;
     c.el.style.setProperty('--sheen', `${(50 - n * 70 - pointer.sx * 18 * focus).toFixed(1)}%`);
     c.el.style.setProperty('--rim', (focus * focus * c.in).toFixed(3));
-    c.el.style.setProperty('--shade', (Math.min(1, a) * 0.42 + e * 0.3).toFixed(3));
+    c.el.style.setProperty('--shade', (Math.min(1, a) * 0.42 + e * 0.3 + foldE * 0.25).toFixed(3));
+    c.el.style.setProperty('--foil', `${(50 + n * 80 + pointer.sx * 30 * focus).toFixed(1)}%`);
+    c.el.style.setProperty('--foilA', (0.25 + focus * 0.55).toFixed(3));
   }
 }
 
@@ -701,6 +706,7 @@ function buildTimeline(L) {
   t.fromTo('.s8 .feat li', { autoAlpha: 0, x: -16 }, { autoAlpha: 1, x: 0, duration: 0.2, stagger: 0.05, ease: 'power2.out' }, 14.1);
   reveal('.s9', 14.95, 15.85);
   t.fromTo('.s9 .svc', { rotateY: -72, z: -120, transformPerspective: 1000, transformOrigin: '0% 50%' }, { rotateY: 0, z: 0, duration: 0.4, stagger: 0.12, ease: 'power3.out' }, 14.95)
+    .fromTo('.s9 .svc-in', { rotateY: 0 }, { rotateY: 180, duration: 0.32, stagger: 0.1, ease: 'power2.inOut' }, 15.32)
     .to('.s9 .svc', { rotateY: 60, transformOrigin: '100% 50%', duration: 0.2, stagger: 0.04, ease: 'power2.in' }, 15.85);
   reveal('.s9b', 15.95, 16.9);
   t.fromTo('.roles li', { autoAlpha: 0, scale: 0.8, y: 10 }, { autoAlpha: 1, scale: 1, y: 0, duration: 0.18, stagger: 0.04, ease: 'back.out(2)' }, 16.08);
@@ -713,7 +719,8 @@ function buildTimeline(L) {
   show('#shot', STUDY + 0.05, null);
   reveal('.c1', STUDY + 0.2, STUDY + 0.9);
   reveal('.c2', STUDY + 1.1, STUDY + 1.88);
-  t.fromTo('.checks li', { autoAlpha: 0, x: -18 }, { autoAlpha: 1, x: 0, duration: 0.2, stagger: 0.08, ease: 'power2.out' }, STUDY + 1.2);
+  // inspection checks deal in like cards: they swing down from above in 3D
+  t.fromTo('.checks li', { autoAlpha: 0, rotateX: -80, y: 18, z: -60, transformPerspective: 700, transformOrigin: '50% 0%' }, { autoAlpha: 1, rotateX: 0, y: 0, z: 0, duration: 0.28, stagger: 0.09, ease: 'back.out(1.6)' }, STUDY + 1.2);
   reveal('.c3', STUDY + 2.15, STUDY + 2.9);
   reveal('.c4', STUDY + 3.05, STUDY + 3.5);
   reveal('.c5', STUDY + 3.62, null);
@@ -795,6 +802,10 @@ $$('.card').forEach((card) => {
   sheen.className = 'sheen';
   sheen.setAttribute('aria-hidden', 'true');
   card.appendChild(sheen);
+  const foil = document.createElement('i');
+  foil.className = 'foil';
+  foil.setAttribute('aria-hidden', 'true');
+  card.appendChild(foil);
 });
 $$('.card svg *, .svc svg *, .panel svg *').forEach((shape) => {
   if (shape.tagName === 'g') return;

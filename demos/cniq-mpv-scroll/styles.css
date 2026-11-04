@@ -268,7 +268,45 @@ body {
     linear-gradient(105deg, transparent 0%, transparent 38%, rgba(255, 246, 228, 0.13) 48%, rgba(255, 255, 255, 0.04) 54%, transparent 64%, transparent 100%) var(--sheen) 0 / 260% 100% no-repeat,
     rgba(8, 8, 8, var(--shade));
 }
-.svc { backface-visibility: hidden; }
+/* holographic foil: shifts with the card's angle and the pointer */
+.card .foil {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background: linear-gradient(115deg, transparent 18%, rgba(120, 165, 255, 0.11) 33%, rgba(255, 216, 160, 0.14) 44%, rgba(196, 150, 255, 0.09) 55%, rgba(140, 230, 220, 0.07) 64%, transparent 78%);
+  background-size: 320% 100%;
+  background-position: var(--foil, 50%) 0;
+  mix-blend-mode: screen;
+  opacity: var(--foilA, 0.5);
+}
+/* floor reflection: each rail mirrors faintly on the mat */
+.cards { -webkit-box-reflect: below 20px linear-gradient(transparent 64%, rgba(255, 255, 255, 0.16)); }
+
+/* flip cards (airport / intercity): front and back faces turn in 3D */
+.svc { perspective: 1000px; }
+.svc-in { position: relative; transform-style: preserve-3d; }
+.svc .face { backface-visibility: hidden; -webkit-backface-visibility: hidden; }
+.svc .back {
+  position: absolute;
+  inset: 0;
+  transform: rotateY(180deg);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 18px 20px;
+  margin-left: calc(clamp(16px, 2vw, 28px) * -1 - 1px);
+  border-left: 1px solid var(--gold);
+  background:
+    radial-gradient(120% 90% at 0% 0%, rgba(184, 149, 90, 0.14), transparent 60%),
+    linear-gradient(160deg, #ffffff, #f1efe9);
+  box-shadow: 0 26px 50px -30px rgba(0, 0, 0, 0.45), inset 0 1px 0 #fff;
+  border-radius: 0 6px 6px 0;
+}
+.svc .back .kicker { font-family: var(--mono); font-size: 10px; letter-spacing: 0.14em; text-transform: uppercase; color: #8a6a35; }
+.svc .back h3 { margin: 10px 0 12px; }
+.svc .back ul { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; font-size: clamp(13px, 1.05vw, 15px); color: #3c3c3c; }
+.svc .back li::before { content: ""; display: inline-block; width: 14px; height: 1px; margin: 0 10px 4px 0; background: var(--gold); vertical-align: middle; }
 
 /* ---------- 07 · workflow on the mat ---------- */
 .s5b { padding: calc(var(--road-top) + 5.5vh) var(--gutter) 0; }
@@ -656,6 +694,10 @@ body {
 .chapters button:hover span,
 .chapters button:focus-visible span { opacity: 1; transform: translate(0, -50%); }
 .chapters button:focus-visible { outline: 1px solid currentColor; outline-offset: 3px; }
+/* leave room for the chapter rail on the right when it is shown */
+@media (min-aspect-ratio: 1/1) and (min-height: 621px) {
+  .rail-head { padding-right: calc(var(--gutter) + 38px); }
+}
 @media (max-aspect-ratio: 1/1), (max-height: 620px) {
   .chapters { display: none; }
 }
