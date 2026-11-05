@@ -173,8 +173,15 @@ const road = buildRoad();
 const wall = buildWall();
 scene.add(road, wall);
 
-const vehicle = createVehicle();
-scene.add(vehicle.group);
+// two original vehicles; the switch in the edition bar picks which one drives
+const fleet = { mpv: createVehicle('mpv'), suv: createVehicle('suv') };
+let vehicle = fleet.mpv;
+for (const v of Object.values(fleet)) scene.add(v.group);
+// build both vehicles' shaders up front so switching never stalls on a first-time compile
+if (renderer) {
+  try { renderer.compile(scene, camera); } catch (err) { /* compile on first draw instead */ }
+}
+fleet.suv.group.visible = false;
 
 // ---------------------------------------------------------------- camera rig (all values tweened by GSAP)
 const rig = {
@@ -743,7 +750,8 @@ const paintTarget = new THREE.Color();
 function setEdition(id, animate = true) {
   const ed = EDITIONS[id] || EDITIONS.pearl;
   paintTarget.setHex(ed.hex);
-  const targets = [vehicle.uniforms.uBody.value, vehicle.materials.paint.color];
+  const vs = Object.values(fleet);
+  const targets = vs.flatMap((v) => [v.uniforms.uBody.value, v.materials.paint.color]);
   gsap.to(targets, {
     r: paintTarget.r, g: paintTarget.g, b: paintTarget.b,
     duration: animate && !reduceMotion ? 0.9 : 0,
@@ -752,17 +760,41 @@ function setEdition(id, animate = true) {
     onUpdate: () => { lastKey = ''; },
     onComplete: () => { lastKey = ''; },
   });
-  gsap.to([vehicle.materials.body, vehicle.materials.paint], {
+  gsap.to(vs.flatMap((v) => [v.materials.body, v.materials.paint]), {
     envMapIntensity: ed.env,
     duration: animate && !reduceMotion ? 0.9 : 0,
     ease: 'power2.inOut',
     overwrite: true,
   });
   $('#edName').textContent = ed.name;
-  $$('#editions button').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.ed === id)));
+  $$('.ed-swatches button').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.ed === id)));
   try { localStorage.setItem('cniq-edition', id); } catch (err) { /* storage unavailable */ }
 }
-$$('#editions button').forEach((b) => b.addEventListener('click', () => setEdition(b.dataset.ed)));
+$$('.ed-swatches button').forEach((b) => b.addEventListener('click', () => setEdition(b.dataset.ed)));
+
+// vehicle switch: the new vehicle takes the old one's place with a short settle
+function setVehicle(type, animate = true) {
+  const next = fleet[type] || fleet.mpv;
+  if (next !== vehicle) {
+    vehicle.group.visible = false;
+    vehicle = next;
+    vehicle.group.visible = true;
+    if (animate && !reduceMotion) {
+      gsap.fromTo(vehicle.group.scale, { x: 0.94, y: 0.94, z: 0.94 }, {
+        x: 1, y: 1, z: 1, duration: 0.7, ease: 'back.out(1.8)', overwrite: true,
+        onUpdate: () => { lastKey = ''; },
+      });
+    }
+    lastKey = '';
+  }
+  $$('.ed-type button').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.type === type)));
+  try { localStorage.setItem('cniq-vehicle', type); } catch (err) { /* storage unavailable */ }
+}
+$$('.ed-type button').forEach((b) => b.addEventListener('click', () => setVehicle(b.dataset.type)));
+let savedVehicle = 'mpv';
+try { savedVehicle = localStorage.getItem('cniq-vehicle') || 'mpv'; } catch (err) { /* storage unavailable */ }
+const urlVehicle = params.get('vehicle');
+setVehicle(fleet[urlVehicle] ? urlVehicle : savedVehicle, false);
 let savedEdition = 'pearl';
 try { savedEdition = localStorage.getItem('cniq-edition') || 'pearl'; } catch (err) { /* storage unavailable */ }
 const urlEdition = params.get('edition');
@@ -841,8 +873,10 @@ if (!reduceMotion) {
 // debug hook for automated checks: window.__cniq.seek(timelineSeconds)
 window.__cniq = {
   rig,
-  vehicle,
+  get vehicle() { return vehicle; },
+  fleet,
   setEdition,
+  setVehicle,
   get timeline() { return tl; },
   seek(time, smooth = false) {
     const st = tl && tl.scrollTrigger;

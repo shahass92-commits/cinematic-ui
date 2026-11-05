@@ -592,6 +592,20 @@ body {
 }
 .ready .editions { opacity: 1; }
 .ed-label { color: var(--ink-2); }
+.ed-type { display: flex; padding: 2px; border-radius: 999px; background: rgba(14, 14, 14, 0.06); border: 1px solid var(--hair); }
+.ed-type button {
+  font: inherit;
+  letter-spacing: inherit;
+  color: var(--ink-2);
+  background: none;
+  border: 0;
+  border-radius: 999px;
+  padding: 5px 11px;
+  cursor: pointer;
+  transition: background 0.25s ease, color 0.25s ease;
+}
+.ed-type button[aria-pressed="true"] { background: var(--ink); color: var(--paper); }
+.ed-type button:focus-visible { outline: 2px solid var(--blue); outline-offset: 2px; }
 .ed-name { min-width: 15ch; }
 .ed-swatches { display: flex; gap: 6px; }
 .ed-swatches button {
@@ -707,6 +721,8 @@ body {
   .ed-label { display: none; }
   .ed-name { min-width: 0; font-size: 9px; max-width: 11ch; }
   .ed-swatches button { width: 20px; height: 20px; }
+  .ed-type button { padding: 4px 8px; font-size: 9px; }
+  .ed-name { display: none; }
 }
 
 @media (prefers-reduced-motion: reduce) {
