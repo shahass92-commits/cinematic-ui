@@ -45,10 +45,8 @@
 
   <!-- night campus backdrop: an original illustrated IT campus behind the road (no logos or signage) -->
   <div class="campus" id="campus" aria-hidden="true">
-    <i class="sky"></i>
-    <i class="layer far" id="campusFar"></i>
-    <i class="layer mid" id="campusMid"></i>
-    <i class="layer near" id="campusNear"></i>
+    <i class="photo city" id="campusCity"></i>
+    <i class="photo airport" id="campusAirport"></i>
   </div>
 
   <!-- studio horizon: a soft glow where the floor meets the upper field -->
@@ -58,6 +56,12 @@
 
   <!-- floor reflection: a blurred, mirrored copy of the car, redrawn from the 3D scene -->
   <canvas class="reflect" id="reflect" aria-hidden="true"></canvas>
+
+  <!-- side-view SUV photo: pinned to the 3D SUV's wheels each frame; the rims spin; a mirrored copy is the floor reflection -->
+  <div class="car-photo" id="carPhoto" aria-hidden="true">
+    <div class="car"><i class="wheel rear"></i><i class="wheel front"></i></div>
+    <div class="mirror"><div class="car"><i class="wheel rear"></i><i class="wheel front"></i></div></div>
+  </div>
 
   <!-- wet-road reflections of the campus lights, laid over the road -->
   <div class="wet" id="wet" aria-hidden="true"><i id="wetMid"></i></div>
@@ -93,7 +97,8 @@
     <section class="scene s1" aria-labelledby="h1">
       <div class="hero-card">
         <div class="brand">
-          <strong>CNIQ</strong>
+          <img class="mark" src="assets/logo-mark.png" alt="" width="44" height="44">
+          <strong>CN<b>iQ</b></strong>
           <span>NAVIGATE INTELLIGENCE</span>
           <i class="rule"></i>
         </div>
@@ -431,22 +436,11 @@
     </section>
   </main>
 
-  <!-- colour editions: same vehicle, five paints -->
-  <div class="editions" id="editions" role="group" aria-label="Vehicle colour edition">
+  <!-- one vehicle, one colour: the electric SUV in Pearl White -->
+  <div class="editions" id="editions" role="group" aria-label="Vehicle">
     <button type="button" class="ed-theme" id="themeToggle" aria-label="Switch to light theme" title="Light / dark"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="5.2"/><path d="M12 6.8a5.2 5.2 0 0 0 0 10.4z" class="fill"/></svg></button>
-    <div class="ed-type" role="group" aria-label="Vehicle">
-      <button type="button" data-type="mpv" aria-pressed="true">MPV</button>
-      <button type="button" data-type="suv" aria-pressed="false">SUV</button>
-    </div>
-    <span class="ed-label">Edition</span>
-    <span class="ed-name" id="edName" aria-live="polite">Pearl White</span>
-    <div class="ed-swatches">
-      <button type="button" data-ed="pearl" style="--sw:#f2f1ed" aria-label="Pearl White" aria-pressed="true"></button>
-      <button type="button" data-ed="cosmos" style="--sw:#111214" aria-label="Cosmos Black" aria-pressed="false"></button>
-      <button type="button" data-ed="graphite" style="--sw:#55585e" aria-label="Graphite Grey" aria-pressed="false"></button>
-      <button type="button" data-ed="harbour" style="--sw:#23407a" aria-label="Harbour Blue" aria-pressed="false"></button>
-      <button type="button" data-ed="champagne" style="--sw:#bba47e" aria-label="Champagne Gold" aria-pressed="false"></button>
-    </div>
+    <span class="ed-label">Electric SUV</span>
+    <span class="ed-name" id="edName"><i class="ed-dot" aria-hidden="true"></i>Pearl White</span>
   </div>
 
   <div class="shot" id="shot" aria-hidden="true">

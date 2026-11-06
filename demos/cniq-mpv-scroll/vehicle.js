@@ -282,8 +282,9 @@ const ZONE_MAIN = /* glsl */ `
   // ---- glass, pillars and roof
   // minimal panoramic glass panel centred on a white roof (reads in the top view)
   float czTop = czAA(0.7, czN.y);
-  float czRoof = czTop * czBand(czP.x, -1.62, 0.14) * (1.0 - czAA(0.64, czZn));
-  float czRoofFrame = czTop * czBand(czP.x, -1.65, 0.17) * (1.0 - czAA(0.675, czZn)) * (1.0 - czRoof);
+  // solid painted roof: no glass panel in the top view
+  float czRoof = 0.0 * czTop;
+  float czRoofFrame = 0.0;
   czGlass = max(czGlass, czRoof);
   float czPillar = czSideBand * (1.0 - clamp(czPane, 0.0, 1.0)) * czSide;
   float czPrivacy = 1.0 - czAA(-0.11, czP.x);
@@ -346,8 +347,8 @@ const ZONE_MAIN = /* glsl */ `
   czCol = mix(czCol, vec3(0.009), czDarkTrim); czRough = mix(czRough, 0.5, czDarkTrim); czCC = mix(czCC, 0.2, czDarkTrim);
   czCol = mix(czCol, vec3(0.004), czGlossBlack); czRough = mix(czRough, 0.08, czGlossBlack); czCC = mix(czCC, 1.0, czGlossBlack);
   czCol = mix(czCol, vec3(0.05, 0.052, 0.056), czMeshL); czMetal = mix(czMetal, 0.6, czMeshL); czRough = mix(czRough, 0.35, czMeshL);
-  czCol = mix(czCol, vec3(0.032, 0.037, 0.044), czGlass); czRough = mix(czRough, 0.22, czGlass); czCC = mix(czCC, 0.0, czGlass);
-  vec3 czPaneCol = mix(vec3(0.05, 0.057, 0.066), vec3(0.14, 0.16, 0.185), czSky) * mix(1.0, 0.82, czPrivacy);
+  czCol = mix(czCol, vec3(0.16, 0.19, 0.23), czGlass); czRough = mix(czRough, 0.08, czGlass); czCC = mix(czCC, 0.0, czGlass);
+  vec3 czPaneCol = mix(vec3(0.2, 0.235, 0.28), vec3(0.42, 0.48, 0.55), czSky); // clean, clear glass
   czCol = mix(czCol, czPaneCol, czPane * czGlass); czRough = mix(czRough, 0.42, czPane * czGlass);
   czCol = mix(czCol, vec3(0.002), czPillar); czRough = mix(czRough, 0.38, czPillar); czCC = mix(czCC, 0.0, czPillar);
   // cabin seen through the glass: floor, three seat rows (backrest + cushion), a centre aisle

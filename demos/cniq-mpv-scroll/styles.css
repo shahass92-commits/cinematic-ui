@@ -125,12 +125,16 @@ body {
 /* ---------- 01 hero ---------- */
 /* hero copy sits in one card; in the dark theme it becomes a clean Apple-style glass frame */
 .s1 .hero-card { position: absolute; left: var(--gutter); top: max(56px, 8vh); display: grid; gap: 30px; }
-.s1 .brand { display: grid; gap: 6px; }
+.s1 .brand { display: grid; grid-template-columns: auto 1fr; column-gap: 14px; row-gap: 4px; align-items: center; }
+.s1 .brand .mark { grid-row: span 2; width: 44px; height: 44px; border-radius: 50%; filter: drop-shadow(0 0 14px rgba(94, 160, 255, 0.45)); }
+.s1 .brand strong b { font-weight: inherit; color: #5e8ff2; }
+:root[data-theme="dark"] .s1 .brand strong b { color: #8ec2ff; text-shadow: 0 0 14px rgba(94, 160, 255, 0.55); }
+.s1 .brand .rule { grid-column: 1 / -1; }
 .brand strong { font-family: var(--display); font-weight: 800; font-size: 26px; letter-spacing: 0.01em; }
 .brand span { font-family: var(--display); font-weight: 600; font-size: 12.5px; letter-spacing: 0.08em; }
 .brand .rule { display: block; width: 40px; height: 1.5px; background: var(--ink); margin-top: 26px; }
 .s1 .display { position: relative; }
-.s1 .brand .rule { margin-top: 18px; }
+.s1 .brand .rule { margin-top: 18px; background: linear-gradient(90deg, #5e8ff2, transparent); width: 72px; }
 :root[data-theme="dark"] .s1 .hero-card {
   left: calc(var(--gutter) - 30px);
   top: max(36px, 5vh);
@@ -612,7 +616,9 @@ body {
   transition: opacity 0.8s ease 0.4s;
 }
 .ready .editions { opacity: 1; }
-.ed-label { color: var(--ink-2); }
+.ed-label { color: var(--ink-2); padding-left: 4px; }
+.ed-name { display: inline-flex; align-items: center; gap: 8px; padding-right: 10px; }
+.ed-dot { width: 14px; height: 14px; border-radius: 50%; background: radial-gradient(circle at 32% 28%, #fff, #e8e6e0 60%, #c9c6bd); box-shadow: 0 0 0 1.5px rgba(142, 194, 255, 0.6); }
 .ed-type { display: flex; padding: 2px; border-radius: 999px; background: rgba(14, 14, 14, 0.06); border: 1px solid var(--hair); }
 .ed-type button {
   font: inherit;
@@ -751,6 +757,9 @@ body {
    DARK THEME (default) — night field, Apple-style glass frames and buttons
    ================================================================= */
 :root[data-theme="dark"] {
+  --logo: #8ec2ff;
+  --logo-2: #5e8ff2;
+  --logo-glow: rgba(94, 160, 255, 0.45);
   --paper: #0a0b0d;
   --ink: #f2f1ec;
   --ink-2: #8e9198;
@@ -769,18 +778,14 @@ body {
     linear-gradient(to right, rgba(255, 255, 255, 0.045) 1px, transparent 1px),
     linear-gradient(to bottom, rgba(255, 255, 255, 0.045) 1px, transparent 1px);
 }
-/* studio upper field: near-black blue gradient, a faint blue grid fading toward the floor, and a vignette */
-:root[data-theme="dark"] .paper { background: linear-gradient(180deg, #05070c 0%, #0a0e18 100%); }
+/* studio upper field: the studio photo (near-black wall with a faint blue grid, charcoal floor) plus a vignette */
+:root[data-theme="dark"] .paper { background: #05070c url("assets/studio.jpg") center 100% / cover no-repeat; }
+:root[data-theme="dark"] .grid { display: none; }
 :root[data-theme="dark"] .paper::after {
   content: "";
   position: absolute;
   inset: 0;
-  background:
-    linear-gradient(to right, rgba(111, 134, 255, 0.05) 1px, transparent 1px) 0 0 / 56px 56px,
-    linear-gradient(to bottom, rgba(111, 134, 255, 0.05) 1px, transparent 1px) 0 0 / 56px 56px;
-  -webkit-mask-image: linear-gradient(180deg, #000 0%, rgba(0, 0, 0, 0.6) 55%, transparent 85%);
-  mask-image: linear-gradient(180deg, #000 0%, rgba(0, 0, 0, 0.6) 55%, transparent 85%);
-  box-shadow: inset 0 0 220px 60px rgba(0, 0, 0, 0.65);
+  box-shadow: inset 0 0 220px 60px rgba(0, 0, 0, 0.55);
 }
 .horizon {
   position: fixed;
@@ -823,15 +828,25 @@ body {
 :root[data-theme="dark"] .svc p,
 :root[data-theme="dark"] .svc .back ul { color: rgba(242, 241, 236, 0.66); }
 :root[data-theme="dark"] .scene:not(.on-road) .eyebrow,
-:root[data-theme="dark"] .svc .back .kicker { color: var(--gold); }
+:root[data-theme="dark"] .svc .back .kicker { color: var(--logo); }
 :root[data-theme="dark"] .status li.now,
 :root[data-theme="dark"] .roles li:first-child { color: #e2c792; }
+/* lettering follows the logo: glowing electric blue on dark */
 :root[data-theme="dark"] .scene:not(.on-road) .dim,
 :root[data-theme="dark"] .s1 .grad,
 :root[data-theme="dark"].split .scene:not(.on-road) .dim .wi,
 :root[data-theme="dark"].split .s1 .grad .wi {
-  background-image: linear-gradient(100deg, #7f95ff 0%, #a9b6ff 20%, #c9a465 46%, #f0d9a8 54%, #c9a465 62%, #7f95ff 100%);
+  background-image: linear-gradient(100deg, #5e8ff2 0%, #8ec2ff 30%, #eaf4ff 48%, #8ec2ff 62%, #5e8ff2 100%);
+  filter: drop-shadow(0 0 18px rgba(94, 160, 255, 0.28));
 }
+:root[data-theme="dark"] .on-road .dim { color: rgba(142, 194, 255, 0.62); }
+:root[data-theme="dark"] .on-road .eyebrow,
+:root[data-theme="dark"] .card .idx,
+:root[data-theme="dark"] .flow li b { color: var(--logo); }
+:root[data-theme="dark"] .meter b,
+:root[data-theme="dark"] .flow-line b { background: linear-gradient(90deg, var(--logo-2), var(--logo)); box-shadow: 0 0 12px var(--logo-glow); }
+:root[data-theme="dark"] .flow li.on i { background: var(--logo); border-color: #eaf4ff; box-shadow: 0 0 0 5px rgba(94, 160, 255, 0.2); }
+:root[data-theme="dark"] .card::before { background: linear-gradient(90deg, transparent, rgba(142, 194, 255, 0.9), transparent); }
 :root[data-theme="dark"].split .scene:not(.on-road) .dim,
 :root[data-theme="dark"].split .s1 .grad { background-image: none; }
 
@@ -918,25 +933,15 @@ body {
   --cx-mid: 0px;
   --cx-near: 0px;
 }
-.campus .sky {
+.campus .photo {
   position: absolute;
-  inset: 0;
-  background:
-    radial-gradient(40% 60% at 20% 30%, rgba(160, 180, 230, 0.18), transparent 70%),
-    radial-gradient(35% 50% at 70% 20%, rgba(150, 170, 220, 0.14), transparent 70%),
-    linear-gradient(180deg, #0b1630 0%, #17305f 45%, #3b5a94 78%, #7f8fb4 100%);
+  inset: 0 -6%;
+  background-size: cover;
+  background-repeat: no-repeat;
+  will-change: transform;
 }
-.campus .layer {
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-repeat: repeat-x;
-  background-size: auto 100%;
-}
-.campus .far { height: 78%; background-position: var(--cx-far) 100%; }
-.campus .mid { height: 86%; background-position: var(--cx-mid) 100%; }
-.campus .near { height: 24%; background-position: var(--cx-near) 100%; }
+.campus .city { background-image: url("assets/city-night.jpg"); background-position: center 50%; }
+.campus .airport { background-image: url("assets/airport-road.jpg"); background-position: center 44%; opacity: 0; visibility: hidden; }
 .wet {
   position: fixed;
   left: 0;
@@ -958,6 +963,62 @@ body {
   background-repeat: repeat-x;
   background-size: auto 100%;
   background-position: var(--cx-mid) 0;
+}
+
+/* ---------- side-view SUV photo (native 1280x720 pixels, scaled into place from JS) ---------- */
+.car-photo {
+  position: fixed;
+  left: 0;
+  top: 0;
+  width: 1280px;
+  height: 720px;
+  z-index: 2;
+  transform-origin: 0 0;
+  pointer-events: none;
+  opacity: 0;
+  visibility: hidden;
+  --spin: 0deg;
+}
+.car-photo .car {
+  position: absolute;
+  inset: 0;
+  background: url("assets/suv-side.png") 0 0 / 1280px 720px no-repeat;
+}
+/* soft contact shadow under the cutout */
+.car-photo > .car::before {
+  content: "";
+  position: absolute;
+  left: 170px;
+  right: 150px;
+  top: 500px;
+  height: 52px;
+  border-radius: 50%;
+  background: radial-gradient(closest-side, rgba(0, 0, 0, 0.85), rgba(0, 0, 0, 0.35) 60%, transparent);
+  filter: blur(6px);
+  z-index: -1;
+}
+.car-photo .wheel {
+  position: absolute;
+  top: 399px;
+  width: 124px;
+  height: 124px;
+  border-radius: 50%;
+  background: url("assets/suv-side.png") 0 0 / 1280px 720px no-repeat;
+  transform: rotate(var(--spin));
+  -webkit-mask-image: radial-gradient(circle, #000 86%, transparent 100%);
+  mask-image: radial-gradient(circle, #000 86%, transparent 100%);
+}
+.car-photo .wheel.rear { left: 281px; background-position: -281px -399px; }
+.car-photo .wheel.front { left: 909px; background-position: -909px -399px; }
+.car-photo .mirror {
+  position: absolute;
+  inset: 0;
+  transform-origin: 0 536px;
+  transform: scaleY(-1);
+  opacity: 0.3;
+  filter: blur(4px);
+  -webkit-mask-image: linear-gradient(180deg, transparent 330px, #000 536px);
+  mask-image: linear-gradient(180deg, transparent 330px, #000 536px);
 }
 
 @media (prefers-reduced-motion: reduce) {
