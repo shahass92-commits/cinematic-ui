@@ -347,9 +347,9 @@ const ZONE_MAIN = /* glsl */ `
   czCol = mix(czCol, vec3(0.009), czDarkTrim); czRough = mix(czRough, 0.5, czDarkTrim); czCC = mix(czCC, 0.2, czDarkTrim);
   czCol = mix(czCol, vec3(0.004), czGlossBlack); czRough = mix(czRough, 0.08, czGlossBlack); czCC = mix(czCC, 1.0, czGlossBlack);
   czCol = mix(czCol, vec3(0.05, 0.052, 0.056), czMeshL); czMetal = mix(czMetal, 0.6, czMeshL); czRough = mix(czRough, 0.35, czMeshL);
-  czCol = mix(czCol, vec3(0.06, 0.075, 0.095), czGlass); czRough = mix(czRough, 0.05, czGlass); czCC = mix(czCC, 0.0, czGlass);
-  vec3 czPaneCol = mix(vec3(0.09, 0.105, 0.125), vec3(0.24, 0.28, 0.33), czSky); // clean, clear glass
-  czCol = mix(czCol, czPaneCol, czPane * czGlass); czRough = mix(czRough, 0.42, czPane * czGlass);
+  czCol = mix(czCol, vec3(0.012, 0.014, 0.018), czGlass); czRough = mix(czRough, 0.04, czGlass); czCC = mix(czCC, 1.0, czGlass); czCCR = mix(czCCR, 0.0, czGlass); czCC = mix(czCC, 0.0, czGlass);
+  vec3 czPaneCol = mix(vec3(0.014, 0.016, 0.02), vec3(0.04, 0.046, 0.055), czSky); // real tinted glass: near-black, mirror-like
+  czCol = mix(czCol, czPaneCol, czPane * czGlass); czRough = mix(czRough, 0.04, czPane * czGlass);
   czCol = mix(czCol, vec3(0.002), czPillar); czRough = mix(czRough, 0.38, czPillar); czCC = mix(czCC, 0.0, czPillar);
   // cabin seen through the glass: floor, three seat rows (backrest + cushion), a centre aisle
   float czSeatCol = czBand(czZn, 0.1, 0.56);
@@ -403,10 +403,10 @@ function makeBodyMaterial(uniforms, type) {
       .replace('#include <emissivemap_fragment>', `#include <emissivemap_fragment>\n${ZONE_MAIN}`)
       .replace(
         '#include <lights_physical_fragment>',
-        '#include <lights_physical_fragment>\nmaterial.specularF90 = mix(material.specularF90, 0.16, czGlass);\n#ifdef USE_CLEARCOAT\nmaterial.clearcoat = czCC;\nmaterial.clearcoatRoughness = czCCR;\n#endif\n#ifdef USE_IRIDESCENCE\nmaterial.iridescence *= czPaint;\n#endif',
+        '#include <lights_physical_fragment>\nmaterial.specularF90 = mix(material.specularF90, 1.0, czGlass);\n#ifdef USE_CLEARCOAT\nmaterial.clearcoat = czCC;\nmaterial.clearcoatRoughness = czCCR;\n#endif\n#ifdef USE_IRIDESCENCE\nmaterial.iridescence *= czPaint;\n#endif',
       );
   };
-  mat.customProgramCacheKey = () => `cniq-body-premium-v7-${type}`;
+  mat.customProgramCacheKey = () => `cniq-body-premium-v8-${type}`;
   return mat;
 }
 
