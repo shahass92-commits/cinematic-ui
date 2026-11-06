@@ -393,6 +393,138 @@ function updateScrollFx(dt) {
   }
 }
 
+
+// ---------------------------------------------------------------- night campus backdrop
+// An original illustrated IT campus at blue hour, drawn as three repeating SVG strips
+// (far office blocks, the gate canopy with palms and street lamps, the hedge and kerb).
+// No real logos, signage or buildings are reproduced.
+function rng(seed) { let s = seed; return () => ((s = (s * 16807) % 2147483647) / 2147483647); }
+const svgUrl = (w, h, body) => `url("data:image/svg+xml;utf8,${encodeURIComponent(`<svg xmlns='http://www.w3.org/2000/svg' width='${w}' height='${h}' viewBox='0 0 ${w} ${h}'>${body}</svg>`)}")`;
+
+function campusFar() {
+  const W = 2600, H = 600, r = rng(7);
+  let b = `<defs><linearGradient id='g' x1='0' y1='0' x2='0' y2='1'><stop offset='0' stop-color='#2a3b5e'/><stop offset='1' stop-color='#141c2e'/></linearGradient></defs>`;
+  let x = 0;
+  while (x < W) {
+    const w = 180 + r() * 260, h = 200 + r() * 330, top = H - h;
+    b += `<rect x='${x}' y='${top}' width='${w}' height='${h}' fill='url(#g)'/>`;
+    b += `<rect x='${x}' y='${top}' width='${w}' height='3' fill='#7fd8ff' opacity='0.55'/>`;
+    const cols = Math.floor(w / 16), rows = Math.floor((h - 30) / 20);
+    for (let c = 0; c < cols; c++) {
+      for (let k = 0; k < rows; k++) {
+        const lit = r();
+        if (lit < 0.42) continue;
+        const warm = lit > 0.78;
+        b += `<rect x='${(x + 6 + c * 16).toFixed(1)}' y='${(top + 18 + k * 20).toFixed(1)}' width='9' height='11' fill='${warm ? '#ffdca3' : '#cfe6ff'}' opacity='${(0.35 + r() * 0.55).toFixed(2)}'/>`;
+      }
+    }
+    x += w + 30 + r() * 90;
+  }
+  return svgUrl(W, H, b);
+}
+
+function palm(x, base, h, r) {
+  let p = `<path d='M${x} ${base} C ${x - 6} ${base - h * 0.5}, ${x + 10} ${base - h * 0.8}, ${x + 4} ${base - h}' stroke='#0d1712' stroke-width='${(h / 34).toFixed(1)}' fill='none' stroke-linecap='round'/>`;
+  const tx = x + 4, ty = base - h;
+  for (let i = 0; i < 9; i++) {
+    const a = (-160 + i * 40 + r() * 12) * Math.PI / 180, L = h * (0.32 + r() * 0.12);
+    const ex = tx + Math.cos(a) * L, ey = ty + Math.sin(a) * L * 0.55 + L * 0.35;
+    const cx = tx + Math.cos(a) * L * 0.5, cy = ty + Math.sin(a) * L * 0.5 - L * 0.12;
+    p += `<path d='M${tx} ${ty} Q ${cx.toFixed(1)} ${cy.toFixed(1)} ${ex.toFixed(1)} ${ey.toFixed(1)}' stroke='#122219' stroke-width='${(h / 28).toFixed(1)}' fill='none' stroke-linecap='round'/>`;
+  }
+  return p;
+}
+
+function lamp(x, base, h) {
+  return `<rect x='${x - 1.5}' y='${base - h}' width='3' height='${h}' fill='#1c2230'/>` +
+    `<rect x='${x - 9}' y='${base - h - 2}' width='18' height='4' rx='2' fill='#2a3142'/>` +
+    `<circle cx='${x}' cy='${base - h + 4}' r='26' fill='url(#lg)'/>` +
+    `<circle cx='${x}' cy='${base - h + 3}' r='3.2' fill='#fff6e0'/>`;
+}
+
+function campusMid() {
+  const W = 3000, H = 600, base = H, r = rng(31);
+  let b = `<defs><radialGradient id='lg'><stop offset='0' stop-color='#fff1cf' stop-opacity='0.85'/><stop offset='1' stop-color='#fff1cf' stop-opacity='0'/></radialGradient>
+    <linearGradient id='cab' x1='0' y1='0' x2='0' y2='1'><stop offset='0' stop-color='#9fd9ff' stop-opacity='0.55'/><stop offset='1' stop-color='#2a4a6e' stop-opacity='0.4'/></linearGradient>
+    <linearGradient id='tree' x1='0' y1='0' x2='0' y2='1'><stop offset='0' stop-color='#1d3a2a'/><stop offset='1' stop-color='#0b1610'/></linearGradient></defs>`;
+  // tree canopy band
+  for (let i = 0; i < 26; i++) {
+    const x = (i / 26) * W + r() * 60, rr = 40 + r() * 50;
+    b += `<ellipse cx='${x.toFixed(0)}' cy='${base - 70 - r() * 30}' rx='${rr.toFixed(0)}' ry='${(rr * 0.75).toFixed(0)}' fill='url(#tree)'/>`;
+  }
+  // gate canopy with blue LED edge, two pillars, glass guard cabin and boom barriers
+  const gx = 1200, gw = 1000, gy = base - 230;
+  b += `<rect x='${gx + 120}' y='${gy}' width='34' height='230' fill='#3a4152'/><rect x='${gx + gw - 154}' y='${gy}' width='34' height='230' fill='#3a4152'/>`;
+  b += `<path d='M${gx} ${gy} L ${gx + gw} ${gy - 18} L ${gx + gw} ${gy + 14} L ${gx} ${gy + 26} Z' fill='#262c3a'/>`;
+  b += `<path d='M${gx} ${gy + 26} L ${gx + gw} ${gy + 14}' stroke='#5fc8ff' stroke-width='3'/>`;
+  b += `<path d='M${gx} ${gy + 26} L ${gx + gw} ${gy + 14}' stroke='#5fc8ff' stroke-width='14' opacity='0.18'/>`;
+  for (let i = 0; i < 6; i++) b += `<rect x='${gx + 160 + i * 120}' y='${gy + 20 - i * 1.6}' width='46' height='3' fill='#fff1d6' opacity='0.9'/>`;
+  b += `<rect x='${gx + 440}' y='${base - 120}' width='110' height='120' fill='url(#cab)' stroke='#6fcfff' stroke-opacity='0.6'/>`;
+  b += `<rect x='${gx + 440}' y='${base - 128}' width='110' height='8' fill='#5fc8ff' opacity='0.8'/>`;
+  for (const [bx, dir] of [[gx + 420, -1], [gx + 570, 1]]) {
+    b += `<rect x='${bx - 8}' y='${base - 46}' width='16' height='46' fill='#3a4152'/>`;
+    for (let s = 0; s < 8; s++) b += `<rect x='${bx + dir * (s * 22)}' y='${base - 44}' width='${dir * 22}' height='6' fill='${s % 2 ? '#f4f4f2' : '#d9363e'}'/>`;
+  }
+  // tall blank pylon (lit panel, no logo)
+  b += `<rect x='${gx - 260}' y='${base - 330}' width='70' height='330' rx='6' fill='#2b3140'/><rect x='${gx - 252}' y='${base - 320}' width='6' height='300' fill='#eaf3ff' opacity='0.8'/>`;
+  // palms and street lamps along the verge
+  for (let i = 0; i < 9; i++) {
+    const x = 80 + i * 340 + r() * 40;
+    if (x > gx - 300 && x < gx + gw + 40) continue;
+    b += palm(x, base, 230 + r() * 120, r);
+  }
+  for (let i = 0; i < 12; i++) b += lamp(60 + i * 250, base, 170);
+  return svgUrl(W, H, b);
+}
+
+function campusNear() {
+  const W = 1800, H = 140, r = rng(53);
+  let b = `<defs><linearGradient id='h' x1='0' y1='0' x2='0' y2='1'><stop offset='0' stop-color='#1f3d27'/><stop offset='1' stop-color='#0c1a11'/></linearGradient>
+    <radialGradient id='bg'><stop offset='0' stop-color='#fff4d8' stop-opacity='0.9'/><stop offset='1' stop-color='#fff4d8' stop-opacity='0'/></radialGradient></defs>`;
+  let d = `M0 ${H - 26}`;
+  for (let x = 0; x <= W; x += 30) d += ` Q ${x + 15} ${H - 70 - r() * 30} ${x + 30} ${H - 40 - r() * 14}`;
+  d += ` L ${W} ${H - 26} L ${W} ${H} L 0 ${H} Z`;
+  b += `<path d='${d}' fill='url(#h)'/>`;
+  for (let i = 0; i < 40; i++) b += `<circle cx='${(r() * W).toFixed(0)}' cy='${(H - 50 - r() * 30).toFixed(0)}' r='${(2 + r() * 3).toFixed(1)}' fill='${r() > 0.5 ? '#c8304a' : '#e2b04a'}' opacity='0.8'/>`;
+  for (let i = 0; i < 9; i++) {
+    const x = 100 + i * 200;
+    b += `<rect x='${x - 4}' y='${H - 58}' width='8' height='32' rx='2' fill='#262c36'/><rect x='${x - 4}' y='${H - 58}' width='8' height='7' fill='#fff4d8'/><circle cx='${x}' cy='${H - 52}' r='22' fill='url(#bg)'/>`;
+  }
+  // kerb: black and white blocks along the road edge
+  for (let x = 0; x < W; x += 60) b += `<rect x='${x}' y='${H - 26}' width='30' height='26' fill='#e8e8e4'/><rect x='${x + 30}' y='${H - 26}' width='30' height='26' fill='#16181c'/>`;
+  return svgUrl(W, H, b);
+}
+
+function campusWet() {
+  const W = 3000, H = 400;
+  let b = `<defs><linearGradient id='s' x1='0' y1='0' x2='0' y2='1'><stop offset='0' stop-color='#fff0cc' stop-opacity='0.26'/><stop offset='1' stop-color='#fff0cc' stop-opacity='0'/></linearGradient>
+    <linearGradient id='c' x1='0' y1='0' x2='0' y2='1'><stop offset='0' stop-color='#5fc8ff' stop-opacity='0.45'/><stop offset='1' stop-color='#5fc8ff' stop-opacity='0'/></linearGradient></defs>`;
+  b += `<filter id='bl'><feGaussianBlur stdDeviation='5'/></filter>`;
+  for (let i = 0; i < 12; i++) b += `<rect x='${54 + i * 250}' y='0' width='10' height='${H * 0.7}' fill='url(#s)' filter='url(#bl)'/>`;
+  b += `<rect x='1200' y='0' width='1000' height='${H * 0.45}' fill='url(#c)' opacity='0.35' filter='url(#bl)'/>`;
+  return svgUrl(W, H, b);
+}
+
+const campus = {
+  el: $('#campus'),
+  wet: $('#wet'),
+};
+$('#campusFar').style.backgroundImage = campusFar();
+$('#campusMid').style.backgroundImage = campusMid();
+$('#campusNear').style.backgroundImage = campusNear();
+$('#wetMid').style.backgroundImage = campusWet();
+
+// parallax: each layer slides at a fraction of the road speed in screen pixels
+function updateCampus() {
+  if (campus.el.style.visibility === 'hidden' || campus.el.style.visibility === '') return;
+  const pxPerM = W / rig.vw;
+  const d = rig.s * pxPerM;
+  campus.el.style.setProperty('--cx-far', `${(-d * 0.12 % 2600).toFixed(1)}px`);
+  campus.el.style.setProperty('--cx-mid', `${(-d * 0.42 % 3000).toFixed(1)}px`);
+  campus.el.style.setProperty('--cx-near', `${(-d * 0.8 % 1800).toFixed(1)}px`);
+  campus.wet.style.setProperty('--cx-mid', `${(-d * 0.42 % 3000).toFixed(1)}px`);
+}
+
 // Cards bend like a curved wall around the screen centre: they turn toward the viewer,
 // sink back in depth toward the edges, and a sheen sweeps across the glass as they pass.
 function updateCards3d(narrow) {
@@ -531,6 +663,7 @@ function frame() {
 
   updateCards3d(narrow);
   updateScrollFx(dt);
+  updateCampus();
   updateHud(tl ? tl.time() : 0, speed);
 
   // render only when something visible changed
@@ -693,6 +826,9 @@ function buildTimeline(L) {
   t.fromTo('#ghost2', { autoAlpha: 0, x: () => window.innerWidth * 0.5 }, { autoAlpha: 1, duration: 0.3 }, 5.1)
     .to('#ghost2', { x: () => -($('#ghost2').offsetWidth - window.innerWidth * 0.25), duration: 2.8 }, 5.1)
     .to('#ghost2', { autoAlpha: 0, duration: 0.3 }, 7.6);
+  // night campus: the car drives past an IT campus gate from the end of the platform rail to the crane-up
+  t.fromTo(['#campus', '#wet'], { autoAlpha: 0 }, { autoAlpha: 1, duration: 0.45, ease: 'power1.inOut' }, 7.5)
+    .to(['#campus', '#wet'], { autoAlpha: 0, duration: 0.35, ease: 'power1.in' }, 10.95);
   reveal('.s5', 8.0, 8.92);
   t.fromTo('.s5 .sectors span, .s5 .sectors i', { autoAlpha: 0, y: 40, skewY: 4 }, { autoAlpha: 1, y: 0, skewY: 0, duration: 0.28, stagger: 0.05, ease: 'power3.out' }, 8.02);
   // 07 · workflow: the gold line draws across and each node lights as the line reaches it
@@ -791,6 +927,21 @@ function setVehicle(type, animate = true) {
   try { localStorage.setItem('cniq-vehicle', type); } catch (err) { /* storage unavailable */ }
 }
 $$('.ed-type button').forEach((b) => b.addEventListener('click', () => setVehicle(b.dataset.type)));
+
+// theme toggle: dark by default; the choice is remembered per viewer
+const themeBtn = $('#themeToggle');
+function syncThemeButton() {
+  const dark = root.getAttribute('data-theme') !== 'light';
+  themeBtn.setAttribute('aria-label', dark ? 'Switch to light theme' : 'Switch to dark theme');
+  document.querySelector('meta[name="theme-color"]').setAttribute('content', dark ? '#0a0b0d' : '#f5f5f3');
+}
+themeBtn.addEventListener('click', () => {
+  const next = root.getAttribute('data-theme') === 'light' ? 'dark' : 'light';
+  root.setAttribute('data-theme', next);
+  try { localStorage.setItem('cniq-theme', next); } catch (err) { /* storage unavailable */ }
+  syncThemeButton();
+});
+syncThemeButton();
 let savedVehicle = 'mpv';
 try { savedVehicle = localStorage.getItem('cniq-vehicle') || 'mpv'; } catch (err) { /* storage unavailable */ }
 const urlVehicle = params.get('vehicle');

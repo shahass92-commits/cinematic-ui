@@ -5,7 +5,15 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>CNIQ — Intelligent Navigation</title>
   <meta name="description" content="Compass Nexus iQ: a scroll-driven drive in six side-view scenes, six overhead scenes and a 3D camera study of the same white MPV.">
-  <meta name="theme-color" content="#f5f5f3">
+  <meta name="theme-color" content="#0a0b0d">
+  <script>
+    // theme before first paint: dark by default, light on request (remembered per viewer)
+    (function () {
+      var t = 'dark';
+      try { t = localStorage.getItem('cniq-theme') || 'dark'; } catch (e) {}
+      document.documentElement.setAttribute('data-theme', t === 'light' ? 'light' : 'dark');
+    })();
+  </script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500&family=Manrope:wght@600;700;800&display=swap" rel="stylesheet">
@@ -35,7 +43,18 @@
     <div class="ghost" id="ghost2">COMPASS NEXUS iQ</div>
   </div>
 
+  <!-- night campus backdrop: an original illustrated IT campus behind the road (no logos or signage) -->
+  <div class="campus" id="campus" aria-hidden="true">
+    <i class="sky"></i>
+    <i class="layer far" id="campusFar"></i>
+    <i class="layer mid" id="campusMid"></i>
+    <i class="layer near" id="campusNear"></i>
+  </div>
+
   <canvas id="stage" aria-hidden="true"></canvas>
+
+  <!-- wet-road reflections of the campus lights, laid over the road -->
+  <div class="wet" id="wet" aria-hidden="true"><i id="wetMid"></i></div>
 
   <!-- gold scan line that sweeps up the screen during the crane-up -->
   <div class="scan" id="scan" aria-hidden="true"></div>
@@ -406,6 +425,7 @@
 
   <!-- colour editions: same vehicle, five paints -->
   <div class="editions" id="editions" role="group" aria-label="Vehicle colour edition">
+    <button type="button" class="ed-theme" id="themeToggle" aria-label="Switch to light theme" title="Light / dark"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="5.2"/><path d="M12 6.8a5.2 5.2 0 0 0 0 10.4z" class="fill"/></svg></button>
     <div class="ed-type" role="group" aria-label="Vehicle">
       <button type="button" data-type="mpv" aria-pressed="true">MPV</button>
       <button type="button" data-type="suv" aria-pressed="false">SUV</button>
