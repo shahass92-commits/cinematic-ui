@@ -538,10 +538,11 @@ function updateCampus() {
   if (campus.el.style.visibility === 'hidden' || campus.el.style.visibility === '') return;
   const pxPerM = W / rig.vw;
   const d = rig.s * pxPerM;
-  campus.el.style.setProperty('--cx-far', `${(-d * 0.12 % 2600).toFixed(1)}px`);
-  campus.el.style.setProperty('--cx-mid', `${(-d * 0.42 % 3000).toFixed(1)}px`);
-  campus.el.style.setProperty('--cx-near', `${(-d * 0.8 % 1800).toFixed(1)}px`);
-  campus.wet.style.setProperty('--cx-mid', `${(-d * 0.42 % 3000).toFixed(1)}px`);
+  const px = reduceMotion ? 0 : pointer.sx; // pointer depth: nearer layers lean further with the mouse
+  campus.el.style.setProperty('--cx-far', `${(-d * 0.12 % 2600 - px * 10).toFixed(1)}px`);
+  campus.el.style.setProperty('--cx-mid', `${(-d * 0.42 % 3000 - px * 28).toFixed(1)}px`);
+  campus.el.style.setProperty('--cx-near', `${(-d * 0.8 % 1800 - px * 60).toFixed(1)}px`);
+  campus.wet.style.setProperty('--cx-mid', `${(-d * 0.42 % 3000 - px * 28).toFixed(1)}px`);
 }
 
 // Cards bend like a curved wall around the screen centre: they turn toward the viewer,
@@ -815,7 +816,7 @@ function buildTimeline(L) {
   };
 
   // 01 hero leaves as the mat rises
-  t.to('.s1 .brand, .s1 .display', { autoAlpha: 0, y: -60, duration: 0.35, ease: 'power1.in' }, 0.42)
+  t.to('.s1 .hero-card', { autoAlpha: 0, y: -60, duration: 0.35, ease: 'power1.in' }, 0.42)
     .to('.s1-foot', { autoAlpha: 0, duration: 0.25 }, 0.3);
   // ghost type crosses behind the vehicle
   t.fromTo('#ghost', { autoAlpha: 0, x: () => window.innerWidth * 0.35 }, { autoAlpha: 1, duration: 0.3 }, 0.55)
@@ -848,7 +849,8 @@ function buildTimeline(L) {
     .to('#ghost2', { x: () => -($('#ghost2').offsetWidth - window.innerWidth * 0.25), duration: 2.8 }, 5.1)
     .to('#ghost2', { autoAlpha: 0, duration: 0.3 }, 7.6);
   // night campus: the car drives past an IT campus gate from the end of the platform rail to the crane-up
-  t.fromTo(['#campus', '#wet'], { autoAlpha: 0 }, { autoAlpha: 1, duration: 0.45, ease: 'power1.inOut' }, 7.5)
+  t.fromTo(['#campus', '#wet'], { autoAlpha: 1 }, { autoAlpha: 0, duration: 0.55, ease: 'power1.in' }, 0.35);
+  t.fromTo(['#campus', '#wet'], { autoAlpha: 0 }, { autoAlpha: 1, duration: 0.45, ease: 'power1.inOut', immediateRender: false }, 7.5)
     .to(['#campus', '#wet'], { autoAlpha: 0, duration: 0.35, ease: 'power1.in' }, 10.95);
   reveal('.s5', 8.0, 8.92);
   t.fromTo('.s5 .sectors span, .s5 .sectors i', { autoAlpha: 0, y: 40, skewY: 4 }, { autoAlpha: 1, y: 0, skewY: 0, duration: 0.28, stagger: 0.05, ease: 'power3.out' }, 8.02);
