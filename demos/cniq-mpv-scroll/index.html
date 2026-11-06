@@ -5,7 +5,15 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <title>CNIQ — Intelligent Navigation</title>
   <meta name="description" content="Compass Nexus iQ: a scroll-driven drive in six side-view scenes, six overhead scenes and a 3D camera study of the same white MPV.">
-  <meta name="theme-color" content="#f5f5f3">
+  <meta name="theme-color" content="#0a0b0d">
+  <script>
+    // theme before first paint: dark by default, light on request (remembered per viewer)
+    (function () {
+      var t = 'dark';
+      try { t = localStorage.getItem('cniq-theme') || 'dark'; } catch (e) {}
+      document.documentElement.setAttribute('data-theme', t === 'light' ? 'light' : 'dark');
+    })();
+  </script>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@500&family=Manrope:wght@600;700;800&display=swap" rel="stylesheet">
@@ -35,7 +43,28 @@
     <div class="ghost" id="ghost2">COMPASS NEXUS iQ</div>
   </div>
 
+  <!-- night campus backdrop: an original illustrated IT campus behind the road (no logos or signage) -->
+  <div class="campus" id="campus" aria-hidden="true">
+    <i class="photo city" id="campusCity"></i>
+    <i class="photo airport" id="campusAirport"></i>
+  </div>
+
+  <!-- studio horizon: a soft glow where the floor meets the upper field -->
+  <div class="horizon" aria-hidden="true"></div>
+
   <canvas id="stage" aria-hidden="true"></canvas>
+
+  <!-- floor reflection: a blurred, mirrored copy of the car, redrawn from the 3D scene -->
+  <canvas class="reflect" id="reflect" aria-hidden="true"></canvas>
+
+  <!-- side-view SUV photo: pinned to the 3D SUV's wheels each frame; the rims spin; a mirrored copy is the floor reflection -->
+  <div class="car-photo" id="carPhoto" aria-hidden="true">
+    <div class="car"><i class="wheel rear"></i><i class="wheel front"></i></div>
+    <div class="mirror"><div class="car"><i class="wheel rear"></i><i class="wheel front"></i></div></div>
+  </div>
+
+  <!-- wet-road reflections of the campus lights, laid over the road -->
+  <div class="wet" id="wet" aria-hidden="true"><i id="wetMid"></i></div>
 
   <!-- gold scan line that sweeps up the screen during the crane-up -->
   <div class="scan" id="scan" aria-hidden="true"></div>
@@ -66,12 +95,15 @@
     <div class="streaks" id="streaks" aria-hidden="true"><i style="--k:1;top:9%"></i><i style="--k:1.7;top:21%"></i><i style="--k:0.8;top:34%"></i><i style="--k:2.3;top:48%"></i><i style="--k:1.3;top:63%"></i><i style="--k:2.9;top:79%"></i><i style="--k:1.1;top:92%"></i></div>
     <!-- ===================== 01 · SIDE ===================== -->
     <section class="scene s1" aria-labelledby="h1">
-      <div class="brand">
-        <strong>CNIQ</strong>
-        <span>NAVIGATE INTELLIGENCE</span>
-        <i class="rule"></i>
+      <div class="hero-card">
+        <div class="brand">
+          <img class="mark" src="assets/logo-mark.png" alt="" width="44" height="44">
+          <strong>CN<b>iQ</b></strong>
+          <span>NAVIGATE INTELLIGENCE</span>
+          <i class="rule"></i>
+        </div>
+        <h1 id="h1" class="display">Pure electric.<br><span class="grad">Precisely designed.</span></h1>
       </div>
-      <h1 id="h1" class="display">Pure electric.<br><span class="grad">Precisely designed.</span></h1>
       <div class="on-road s1-foot">
         <p>Compass Nexus iQ — employee transportation for IT campuses, corporate offices, industrial sites and ports. Thiruvananthapuram, Kerala.</p>
         <span class="cue">Scroll to drive <i></i></span>
@@ -274,14 +306,32 @@
     <!-- ===================== 09 · OVERHEAD ===================== -->
     <section class="scene s9 col" aria-label="Airport and intercity services">
       <article class="svc r">
-        <svg class="hex" viewBox="0 0 48 48" aria-hidden="true"><path d="M24 3 42 13.5v21L24 45 6 34.5v-21z"/><path d="M14 24h20M30.5 24l-3-1.2M17 24l-2.4-3.4M17 24l-2.4 3.4M24 24l3.8-7M24 24l3.8 7"/></svg>
-        <h3>Airport<br>transfers</h3>
-        <p>Seamless, punctual, and all-electric journeys to and from the airport.</p>
+        <div class="svc-in">
+          <div class="face front">
+            <svg class="hex" viewBox="0 0 48 48" aria-hidden="true"><path d="M24 3 42 13.5v21L24 45 6 34.5v-21z"/><path d="M14 24h20M30.5 24l-3-1.2M17 24l-2.4-3.4M17 24l-2.4 3.4M24 24l3.8-7M24 24l3.8 7"/></svg>
+            <h3>Airport<br>transfers</h3>
+            <p>Seamless, punctual, and all-electric journeys to and from the airport.</p>
+          </div>
+          <div class="face back">
+            <span class="kicker">On every airport trip</span>
+            <h3>Same record.</h3>
+            <ul><li>Unique Trip ID</li><li>GPS route on record</li><li>Verified before billing</li></ul>
+          </div>
+        </div>
       </article>
       <article class="svc r">
-        <svg class="pins" viewBox="0 0 48 48" aria-hidden="true"><path d="M11 33s-6-6.2-6-10.5a6 6 0 1 1 12 0C17 26.8 11 33 11 33z"/><circle cx="11" cy="22.5" r="2"/><path d="M36 24s-6-6.2-6-10.5a6 6 0 1 1 12 0C42 17.8 36 24 36 24z"/><circle cx="36" cy="13.5" r="2"/><path d="M11 37c7 5 13-2 18-6s8-2 7-7" stroke-dasharray="2 3"/></svg>
-        <h3>Intercity<br>travel</h3>
-        <p>Comfortable, efficient, and sustainable travel between key cities.</p>
+        <div class="svc-in">
+          <div class="face front">
+            <svg class="pins" viewBox="0 0 48 48" aria-hidden="true"><path d="M11 33s-6-6.2-6-10.5a6 6 0 1 1 12 0C17 26.8 11 33 11 33z"/><circle cx="11" cy="22.5" r="2"/><path d="M36 24s-6-6.2-6-10.5a6 6 0 1 1 12 0C42 17.8 36 24 36 24z"/><circle cx="36" cy="13.5" r="2"/><path d="M11 37c7 5 13-2 18-6s8-2 7-7" stroke-dasharray="2 3"/></svg>
+            <h3>Intercity<br>travel</h3>
+            <p>Comfortable, efficient, and sustainable travel between key cities.</p>
+          </div>
+          <div class="face back">
+            <span class="kicker">On every intercity trip</span>
+            <h3>Same standard.</h3>
+            <ul><li>Inspected vehicles</li><li>Verified drivers</li><li>One invoice, linked trips</li></ul>
+          </div>
+        </div>
       </article>
     </section>
 
@@ -340,7 +390,7 @@
       <div class="panel">
       <p class="eyebrow r">Camera study · same vehicle in 3D</p>
       <h2 id="hc1" class="title r">One vehicle.<br><span class="dim">Every angle.</span></h2>
-      <p class="lede r">The same white MPV, now under a free camera: a crane down, a 180° arc, a low-angle hero and a dolly to the wheel.</p>
+      <p class="lede r">The same vehicle, now under a free camera: a crane down, a 180° arc, a low-angle hero and a dolly to the wheel.</p>
       </div>
     </section>
 
@@ -386,17 +436,11 @@
     </section>
   </main>
 
-  <!-- colour editions: same vehicle, five paints -->
-  <div class="editions" id="editions" role="group" aria-label="Vehicle colour edition">
-    <span class="ed-label">Edition</span>
-    <span class="ed-name" id="edName" aria-live="polite">Pearl White</span>
-    <div class="ed-swatches">
-      <button type="button" data-ed="pearl" style="--sw:#f2f1ed" aria-label="Pearl White" aria-pressed="true"></button>
-      <button type="button" data-ed="cosmos" style="--sw:#111214" aria-label="Cosmos Black" aria-pressed="false"></button>
-      <button type="button" data-ed="graphite" style="--sw:#55585e" aria-label="Graphite Grey" aria-pressed="false"></button>
-      <button type="button" data-ed="harbour" style="--sw:#23407a" aria-label="Harbour Blue" aria-pressed="false"></button>
-      <button type="button" data-ed="champagne" style="--sw:#bba47e" aria-label="Champagne Gold" aria-pressed="false"></button>
-    </div>
+  <!-- one vehicle, one colour: the electric SUV in Pearl White -->
+  <div class="editions" id="editions" role="group" aria-label="Vehicle">
+    <button type="button" class="ed-theme" id="themeToggle" aria-label="Switch to light theme" title="Light / dark"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="5.2"/><path d="M12 6.8a5.2 5.2 0 0 0 0 10.4z" class="fill"/></svg></button>
+    <span class="ed-label">Electric SUV</span>
+    <span class="ed-name" id="edName"><i class="ed-dot" aria-hidden="true"></i>Pearl White</span>
   </div>
 
   <div class="shot" id="shot" aria-hidden="true">

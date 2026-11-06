@@ -1,6 +1,7 @@
-// Procedural white MPV used by every scene (side view, top view and the 3D camera study).
+// Procedural vehicles used by every scene (side view, top view and the 3D camera study):
+// an original MPV and an original electric SUV, both designed here from scratch.
 // Built from lofted cross-sections so the silhouette reads correctly from any camera angle.
-// No third-party branding is modelled. Units: metres. Forward = +X, up = +Y, right side = +Z.
+// No third-party models, branding or designs are used. Units: metres. Forward = +X, up = +Y, right = +Z.
 import * as THREE from 'three';
 
 export const SPEC = {
@@ -35,6 +36,28 @@ const BOTTOM = [
   [-2.18, 0.344], [-2.24, 0.37], [-2.3, 0.4], [-2.34, 0.55], [-2.36, 0.66],
 ];
 
+// Original electric SUV, drawn in the MPV's body frame (the whole shell is then scaled to SUV
+// proportions), so every lamp, glass and door zone in the shader still lines up:
+// higher upright nose, more ground clearance, lower roof that falls toward a raked tailgate.
+const SUV_TOP = [
+  [2.36, 0.62], [2.355, 0.72], [2.34, 0.8], [2.3, 0.9], [2.24, 0.97], [2.15, 1.02], [2.0, 1.06],
+  [1.8, 1.095], [1.6, 1.12], [1.42, 1.14], [1.33, 1.155], [1.2, 1.225], [1.0, 1.335], [0.8, 1.435],
+  [0.6, 1.52], [0.4, 1.585], [0.2, 1.63], [0.0, 1.655], [-0.3, 1.668], [-0.7, 1.668], [-1.1, 1.658],
+  [-1.45, 1.643], [-1.75, 1.62], [-1.95, 1.595], [-2.05, 1.575], [-2.12, 1.5], [-2.17, 1.39],
+  [-2.22, 1.3], [-2.27, 1.2], [-2.31, 1.08], [-2.34, 0.95], [-2.36, 0.76],
+];
+const SUV_BOTTOM = [
+  [2.36, 0.58], [2.354, 0.52], [2.34, 0.44], [2.3, 0.375], [2.22, 0.345], [2.05, 0.315],
+  [1.85, 0.3], [1.0, 0.3], [-1.0, 0.3], [-1.75, 0.35], [-2.0, 0.36], [-2.18, 0.38],
+  [-2.26, 0.41], [-2.32, 0.46], [-2.35, 0.58], [-2.36, 0.7],
+];
+
+// Per-type build settings. `shell` scales the body frame; `wheel` scales the wheels.
+const TYPES = {
+  mpv: { top: TOP, bottom: BOTTOM, shell: [1, 1, 1], wheel: 1, track: 1, suv: 0 },
+  suv: { top: SUV_TOP, bottom: SUV_BOTTOM, shell: [0.955, 1, 1.035], wheel: 1.08, track: 1.035, suv: 1 },
+};
+
 function profileSampler(points) {
   const curve = new THREE.CatmullRomCurve3(
     points.map(([x, y]) => new THREE.Vector3(x, y, 0)),
@@ -68,8 +91,11 @@ function profileSampler(points) {
   };
 }
 
-const topAt = profileSampler(TOP);
-const bottomAt = profileSampler(BOTTOM);
+const samplers = {};
+function profileOf(type) {
+  if (!samplers[type]) samplers[type] = { topAt: profileSampler(TYPES[type].top), bottomAt: profileSampler(TYPES[type].bottom) };
+  return samplers[type];
+}
 
 const smooth = (a, b, v) => {
   const t = Math.min(1, Math.max(0, (v - a) / (b - a)));
@@ -91,7 +117,8 @@ function widthFactor(y, yb, yt) {
   return tumble * lower;
 }
 
-function buildBodyGeometry() {
+function buildBodyGeometry(type) {
+  const { topAt, bottomAt } = profileOf(type);
   const NU = 240;
   const NV = 120;
   const DENSE = 720;
@@ -255,17 +282,26 @@ const ZONE_MAIN = /* glsl */ `
   // ---- glass, pillars and roof
   // minimal panoramic glass panel centred on a white roof (reads in the top view)
   float czTop = czAA(0.7, czN.y);
-  float czRoof = czTop * czBand(czP.x, -1.62, 0.14) * (1.0 - czAA(0.64, czZn));
-  float czRoofFrame = czTop * czBand(czP.x, -1.65, 0.17) * (1.0 - czAA(0.675, czZn)) * (1.0 - czRoof);
+  // solid painted roof: no glass panel in the top view
+  float czRoof = 0.0 * czTop;
+  float czRoofFrame = 0.0;
   czGlass = max(czGlass, czRoof);
   float czPillar = czSideBand * (1.0 - clamp(czPane, 0.0, 1.0)) * czSide;
   float czPrivacy = 1.0 - czAA(-0.11, czP.x);
   float czSky = smoothstep(czBelt, czWinTop, czP.y);
 
+  float czArchR = mix(0.405, 0.445, uSuv);
+  float czArchY = mix(0.35, 0.37, uSuv);
+  float czArchF = length(vec2(czP.x - 1.46, czP.y - czArchY));
+  float czArchB = length(vec2(czP.x + 1.43, czP.y - czArchY));
   float czArch = 0.0;
-  czArch = max(czArch, 1.0 - czAA(0.405, length(vec2(czP.x - 1.46, czP.y - 0.35))));
-  czArch = max(czArch, 1.0 - czAA(0.405, length(vec2(czP.x + 1.43, czP.y - 0.35))));
+  czArch = max(czArch, 1.0 - czAA(czArchR, czArchF));
+  czArch = max(czArch, 1.0 - czAA(czArchR, czArchB));
   czArch *= czAA(0.55, czX);
+  // SUV: matte-black arch flares and a lower cladding band
+  float czFlare = uSuv * czAA(0.55, czX) * czAA(0.3, czP.y) * max(czBand(czArchF, czArchR, czArchR + 0.085), czBand(czArchB, czArchR, czArchR + 0.085));
+  float czCladS = uSuv * czSide * (1.0 - czAA(0.5, czP.y));
+  czClad = max(czClad, max(czFlare, czCladS));
 
   // ---- surfacing: rising shoulder crease and a lower door sculpt line
   float czCreaseY = 1.035 + (0.987 - czP.x) * 0.0563;
@@ -277,7 +313,7 @@ const ZONE_MAIN = /* glsl */ `
   float czSeamY = czBand(czP.y, 0.27, czBelt - 0.004);
   float czSeams = (czLine(czP.x, 0.987, 0.003) + czLine(czP.x, -0.106, 0.003)) * czSeamY;
   czSeams += czLine(czP.x, -1.316, 0.003) * czBand(czP.y, 0.8, czBelt - 0.004);
-  czSeams += czLine(length(vec2(czP.x + 1.43, czP.y - 0.35)), 0.47, 0.003) * czAA(-1.43, czP.x) * czBand(czP.y, 0.27, 0.81);
+  czSeams += czLine(czArchB, czArchR + mix(0.065, 0.085, uSuv), 0.003) * czAA(-1.43, czP.x) * czBand(czP.y, mix(0.27, 0.5, uSuv), 0.85);
   float czHandleBox = (czBand(czP.x, -0.07, 0.18) * czBand(czP.y, 0.982, 1.022) + czBand(czP.x, -1.21, -0.96) * czBand(czP.y, 1.042, 1.082)) * czSide;
   float czHandle = (czBand(czP.x, -0.064, 0.174) * czBand(czP.y, 0.987, 1.017) + czBand(czP.x, -1.204, -0.966) * czBand(czP.y, 1.047, 1.077)) * czSide;
   czSeams += (czHandleBox - czHandle);
@@ -287,7 +323,8 @@ const ZONE_MAIN = /* glsl */ `
   // ---- satin-metal accents
   float czDloTop = czBand(czP.y, czWinTop - 0.002, czWinTop + 0.013) * czBand(czP.x, -1.95, 1.05) * czSide;
   float czDloBelt = czBand(czP.y, czBelt - 0.013, czBelt + 0.001) * czBand(czP.x, -1.92, 1.2) * czSide;
-  float czSill = czBand(czP.y, 0.275, 0.292) * czBand(czP.x, -1.0, 1.02) * czSide;
+  float czSillY = mix(0.275, 0.5, uSuv); // SUV: satin strip along the top of the cladding
+  float czSill = czBand(czP.y, czSillY, czSillY + 0.017) * czBand(czP.x, -1.0, 1.02) * czSide;
   float czRail = czBand(czP.y, czYt - 0.03, czYt - 0.004) * czBand(czP.x, -1.65, 0.06) * smoothstep(0.08, 0.3, abs(czN.z));
   float czRailGap = czBand(czP.y, czYt - 0.036, czYt - 0.03) * czBand(czP.x, -1.65, 0.06) * smoothstep(0.08, 0.3, abs(czN.z));
   float czSatin = clamp(czBar + czRail + czRoofFrame + czBarR + czLip + czDiffuser * (1.0 - czFins) + czDloTop + czDloBelt + czSill + czGrilleRim + czFangBlade, 0.0, 1.0);
@@ -310,9 +347,9 @@ const ZONE_MAIN = /* glsl */ `
   czCol = mix(czCol, vec3(0.009), czDarkTrim); czRough = mix(czRough, 0.5, czDarkTrim); czCC = mix(czCC, 0.2, czDarkTrim);
   czCol = mix(czCol, vec3(0.004), czGlossBlack); czRough = mix(czRough, 0.08, czGlossBlack); czCC = mix(czCC, 1.0, czGlossBlack);
   czCol = mix(czCol, vec3(0.05, 0.052, 0.056), czMeshL); czMetal = mix(czMetal, 0.6, czMeshL); czRough = mix(czRough, 0.35, czMeshL);
-  czCol = mix(czCol, vec3(0.032, 0.037, 0.044), czGlass); czRough = mix(czRough, 0.22, czGlass); czCC = mix(czCC, 0.0, czGlass);
-  vec3 czPaneCol = mix(vec3(0.05, 0.057, 0.066), vec3(0.14, 0.16, 0.185), czSky) * mix(1.0, 0.82, czPrivacy);
-  czCol = mix(czCol, czPaneCol, czPane * czGlass); czRough = mix(czRough, 0.42, czPane * czGlass);
+  czCol = mix(czCol, vec3(0.012, 0.014, 0.018), czGlass); czRough = mix(czRough, 0.04, czGlass); czCC = mix(czCC, 1.0, czGlass); czCCR = mix(czCCR, 0.0, czGlass); czCC = mix(czCC, 0.0, czGlass);
+  vec3 czPaneCol = mix(vec3(0.014, 0.016, 0.02), vec3(0.04, 0.046, 0.055), czSky); // real tinted glass: near-black, mirror-like
+  czCol = mix(czCol, czPaneCol, czPane * czGlass); czRough = mix(czRough, 0.04, czPane * czGlass);
   czCol = mix(czCol, vec3(0.002), czPillar); czRough = mix(czRough, 0.38, czPillar); czCC = mix(czCC, 0.0, czPillar);
   // cabin seen through the glass: floor, three seat rows (backrest + cushion), a centre aisle
   float czSeatCol = czBand(czZn, 0.1, 0.56);
@@ -341,7 +378,7 @@ const ZONE_MAIN = /* glsl */ `
   totalEmissiveRadiance += (czTailLine * 1.5 + czBladeR * 1.6 + czTail * 0.22 + czStop) * vec3(1.0, 0.045, 0.03) * uTail;
 `;
 
-function makeBodyMaterial(uniforms) {
+function makeBodyMaterial(uniforms, type) {
   // pearl white: deep clearcoat plus a faint thin-film flop that only shows at grazing angles
   const mat = new THREE.MeshPhysicalMaterial({
     color: 0xffffff,
@@ -361,15 +398,15 @@ function makeBodyMaterial(uniforms) {
     shader.fragmentShader = shader.fragmentShader
       .replace(
         '#include <common>',
-        `#include <common>\nvarying vec3 vP;\nvarying vec3 vN;\nvarying vec3 vRing;\nuniform vec3 uBody;\nuniform float uDrl;\nuniform float uTail;\n${ZONE_GLSL}`,
+        `#include <common>\nvarying vec3 vP;\nvarying vec3 vN;\nvarying vec3 vRing;\nuniform vec3 uBody;\nuniform float uDrl;\nuniform float uTail;\nuniform float uSuv;\n${ZONE_GLSL}`,
       )
       .replace('#include <emissivemap_fragment>', `#include <emissivemap_fragment>\n${ZONE_MAIN}`)
       .replace(
         '#include <lights_physical_fragment>',
-        '#include <lights_physical_fragment>\nmaterial.specularF90 = mix(material.specularF90, 0.16, czGlass);\n#ifdef USE_CLEARCOAT\nmaterial.clearcoat = czCC;\nmaterial.clearcoatRoughness = czCCR;\n#endif\n#ifdef USE_IRIDESCENCE\nmaterial.iridescence *= czPaint;\n#endif',
+        '#include <lights_physical_fragment>\nmaterial.specularF90 = mix(material.specularF90, 1.0, czGlass);\n#ifdef USE_CLEARCOAT\nmaterial.clearcoat = czCC;\nmaterial.clearcoatRoughness = czCCR;\n#endif\n#ifdef USE_IRIDESCENCE\nmaterial.iridescence *= czPaint;\n#endif',
       );
   };
-  mat.customProgramCacheKey = () => 'cniq-mpv-body-premium-v6';
+  mat.customProgramCacheKey = () => `cniq-body-premium-v8-${type}`;
   return mat;
 }
 
@@ -542,15 +579,17 @@ function shadowTexture() {
   return tex;
 }
 
-export function createVehicle() {
+export function createVehicle(type = 'mpv') {
+  const T = TYPES[type] || TYPES.mpv;
   const uniforms = {
     uBody: { value: new THREE.Color(0xf2f1ed) }, // pearl white
     uDrl: { value: 1.2 },
     uTail: { value: 0.6 },
+    uSuv: { value: T.suv },
   };
 
   const materials = {
-    body: makeBodyMaterial(uniforms),
+    body: makeBodyMaterial(uniforms, type),
     paint: new THREE.MeshPhysicalMaterial({
       color: 0xf2f1ed, roughness: 0.22, clearcoat: 1, clearcoatRoughness: 0.03,
       iridescence: 0.16, iridescenceIOR: 1.35, iridescenceThicknessRange: [260, 420],
@@ -568,43 +607,48 @@ export function createVehicle() {
   };
 
   const group = new THREE.Group();
-  group.name = 'cniq-mpv';
+  group.name = `cniq-${type}`;
+  // the shell holds everything drawn in the body frame; it is scaled to the type's proportions
+  const shell = new THREE.Group();
+  shell.scale.set(...T.shell);
+  group.add(shell);
 
-  const body = new THREE.Mesh(buildBodyGeometry(), materials.body);
+  const body = new THREE.Mesh(buildBodyGeometry(type), materials.body);
   body.name = 'body';
-  group.add(body);
+  shell.add(body);
 
   // mirrors
   for (const side of [1, -1]) {
     const cap = new THREE.Mesh(new THREE.SphereGeometry(1, 32, 20), materials.paint);
     cap.scale.set(0.085, 0.064, 0.125);
     cap.position.set(0.83, 1.245, side * 0.975);
-    group.add(cap);
+    shell.add(cap);
     const arm = new THREE.Mesh(new THREE.BoxGeometry(0.07, 0.032, 0.14), materials.gloss);
     arm.position.set(0.87, 1.205, side * 0.865);
-    group.add(arm);
+    shell.add(arm);
     // piano-black lower shell and a slim smoked repeater lens on the leading edge
-    const shell = new THREE.Mesh(new THREE.SphereGeometry(1, 32, 12, 0, Math.PI * 2, Math.PI * 0.62, Math.PI * 0.38), materials.gloss);
-    shell.scale.set(0.087, 0.066, 0.127);
-    shell.position.copy(cap.position);
-    group.add(shell);
+    const lower = new THREE.Mesh(new THREE.SphereGeometry(1, 32, 12, 0, Math.PI * 2, Math.PI * 0.62, Math.PI * 0.38), materials.gloss);
+    lower.scale.set(0.087, 0.066, 0.127);
+    lower.position.copy(cap.position);
+    shell.add(lower);
     const lens = new THREE.Mesh(new THREE.BoxGeometry(0.012, 0.008, 0.085), materials.lens);
     lens.position.set(0.902, 1.22, side * 1.02);
-    group.add(lens);
+    shell.add(lens);
   }
 
   // shark-fin antenna
   const fin = new THREE.Mesh(new THREE.SphereGeometry(1, 24, 12), materials.gloss);
   fin.scale.set(0.13, 0.05, 0.034);
-  fin.position.set(-1.66, 1.722, 0);
-  group.add(fin);
+  fin.position.set(-1.66, profileOf(type).topAt(-1.66) + 0.004, 0);
+  shell.add(fin);
 
   // wheels
   const wheels = [];
   for (const x of [SPEC.frontAxle, SPEC.rearAxle]) {
     for (const side of [1, -1]) {
       const w = buildWheel(materials, side);
-      w.position.set(x, SPEC.wheelRadius, side * SPEC.track);
+      w.scale.setScalar(T.wheel);
+      w.position.set(x * T.shell[0], SPEC.wheelRadius * T.wheel, side * SPEC.track * T.track);
       w.userData.front = x > 0;
       group.add(w);
       wheels.push(w);
@@ -626,7 +670,7 @@ export function createVehicle() {
   });
 
   function update({ distance = 0, steer = 0, drl = 1.2, tail = 0.6 } = {}) {
-    const turn = distance / SPEC.wheelRadius;
+    const turn = distance / (SPEC.wheelRadius * T.wheel);
     for (const w of wheels) {
       w.userData.spin.rotation.z = -turn * w.userData.side;
       w.rotation.y = (w.userData.side < 0 ? Math.PI : 0) + (w.userData.front ? steer : 0);

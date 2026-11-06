@@ -173,8 +173,15 @@ const road = buildRoad();
 const wall = buildWall();
 scene.add(road, wall);
 
-const vehicle = createVehicle();
-scene.add(vehicle.group);
+// two original vehicles; the switch in the edition bar picks which one drives
+const fleet = { mpv: createVehicle('mpv'), suv: createVehicle('suv') };
+let vehicle = fleet.mpv;
+for (const v of Object.values(fleet)) scene.add(v.group);
+// build both vehicles' shaders up front so switching never stalls on a first-time compile
+if (renderer) {
+  try { renderer.compile(scene, camera); } catch (err) { /* compile on first draw instead */ }
+}
+fleet.suv.group.visible = false;
 
 // ---------------------------------------------------------------- camera rig (all values tweened by GSAP)
 const rig = {
@@ -235,8 +242,28 @@ let lastTime = performance.now();
 let speed = 0;
 let tl = null;
 let lastKey = '';
+// floor reflection: copied from the WebGL canvas right after each render, flipped and blurred by CSS
+const reflect = document.getElementById('reflect');
+const rctx = reflect.getContext('2d');
+let roadTopPx = 0;
+function updateReflection() {
+  const side = Math.max(0, 1 - rig.elev / 6); // only while the camera is at side elevation
+  if (side < 0.02 || roadTopPx <= 0) { reflect.style.opacity = '0'; return; }
+  const dpr = renderer.getPixelRatio();
+  const h = Math.min(roadTopPx, H * 0.32); // the band above the road that holds the car
+  const dw = Math.max(1, Math.round(W / 2));
+  const dh = Math.max(1, Math.round(h / 2));
+  if (reflect.width !== dw || reflect.height !== dh) { reflect.width = dw; reflect.height = dh; }
+  reflect.style.height = `${h.toFixed(1)}px`;
+  rctx.setTransform(1, 0, 0, -1, 0, dh); // mirror vertically: the wheels meet their reflection at the road line
+  rctx.clearRect(0, 0, dw, dh);
+  rctx.drawImage(renderer.domElement, 0, Math.max(0, (roadTopPx - h) * dpr), W * dpr, h * dpr, 0, 0, dw, dh);
+  rctx.setTransform(1, 0, 0, 1, 0, 0);
+  reflect.style.opacity = (0.3 * side).toFixed(3);
+}
 // 3D rail cards: GSAP tweens `in` (entrance 0..1); frame() composes the full transform every tick
 let railCards = [];
+let currentEdition = 'pearl';
 // scroll velocity drives a gentle skew on the moving type and rails; it decays when scrolling stops
 let scrollVel = 0;
 let skew = 0;
@@ -386,6 +413,67 @@ function updateScrollFx(dt) {
   }
 }
 
+
+// ---------------------------------------------------------------- night drive backdrop
+// Two night photos (a city road, then an elevated road toward the airport) sit behind the
+// road during the night drive; soft wet-road streaks are drawn over the road below them.
+const svgUrl = (w, h, body) => `url("data:image/svg+xml;utf8,${encodeURIComponent(`<svg xmlns='http://www.w3.org/2000/svg' width='${w}' height='${h}' viewBox='0 0 ${w} ${h}'>${body}</svg>`)}")`;
+
+function campusWet() {
+  const W = 3000, H = 400;
+  let b = `<defs><linearGradient id='s' x1='0' y1='0' x2='0' y2='1'><stop offset='0' stop-color='#fff0cc' stop-opacity='0.26'/><stop offset='1' stop-color='#fff0cc' stop-opacity='0'/></linearGradient>
+    <linearGradient id='c' x1='0' y1='0' x2='0' y2='1'><stop offset='0' stop-color='#5fc8ff' stop-opacity='0.45'/><stop offset='1' stop-color='#5fc8ff' stop-opacity='0'/></linearGradient></defs>`;
+  b += `<filter id='bl'><feGaussianBlur stdDeviation='5'/></filter>`;
+  for (let i = 0; i < 12; i++) b += `<rect x='${54 + i * 250}' y='0' width='10' height='${H * 0.7}' fill='url(#s)' filter='url(#bl)'/>`;
+  b += `<rect x='1200' y='0' width='1000' height='${H * 0.45}' fill='url(#c)' opacity='0.35' filter='url(#bl)'/>`;
+  return svgUrl(W, H, b);
+}
+
+const campus = {
+  el: $('#campus'),
+  wet: $('#wet'),
+};
+$('#wetMid').style.backgroundImage = campusWet();
+
+// side-view SUV photo: pinned to the 3D SUV's projected wheels, shown in place of the 3D body at side elevation
+const carPhoto = {
+  el: $('#carPhoto'),
+  ready: false,
+  rear: new THREE.Vector3(),
+  front: new THREE.Vector3(),
+  a: { x: 0, y: 0, z: 0 },
+  b: { x: 0, y: 0, z: 0 },
+};
+{
+  const img = new Image();
+  img.onload = () => { carPhoto.ready = true; lastKey = ''; };
+  img.src = 'assets/suv-side.jpg';
+}
+const PHOTO = { rearX: 343, frontX: 971, contactY: 536 }; // measured on the 1280x720 photo
+function updateCarPhoto() {
+  const want = carPhoto.ready && vehicle === fleet.suv && currentEdition === 'pearl' && root.getAttribute('data-theme') !== 'light';
+  const side = want ? Math.max(0, 1 - rig.elev / 6) : 0;
+  const hide3d = side > 0 && rig.elev < 2;
+  const vis = vehicle === fleet.suv && !hide3d;
+  if (fleet.suv.group.visible !== vis) { fleet.suv.group.visible = vis; lastKey = ''; }
+  if (side <= 0.01) {
+    if (carPhoto.el.style.visibility !== 'hidden') { carPhoto.el.style.visibility = 'hidden'; carPhoto.el.style.opacity = '0'; }
+    return;
+  }
+  fleet.suv.wheelWorld(false, 1, carPhoto.rear);
+  fleet.suv.wheelWorld(true, 1, carPhoto.front);
+  toScreen(carPhoto.rear, carPhoto.a);
+  toScreen(carPhoto.front, carPhoto.b);
+  const k = (carPhoto.b.x - carPhoto.a.x) / (PHOTO.frontX - PHOTO.rearX);
+  const tx = carPhoto.a.x - PHOTO.rearX * k;
+  const ty = roadTopPx - PHOTO.contactY * k;
+  carPhoto.el.style.visibility = 'visible';
+  carPhoto.el.style.opacity = side.toFixed(3);
+  carPhoto.el.style.transform = `translate3d(${tx.toFixed(1)}px, ${ty.toFixed(1)}px, 0) scale(${k.toFixed(4)})`;
+  const spin = (rig.s / (SPEC.wheelRadius * 1.08)) * (180 / Math.PI);
+  carPhoto.el.style.setProperty('--spin', `${(spin % 360).toFixed(1)}deg`);
+}
+
 // Cards bend like a curved wall around the screen centre: they turn toward the viewer,
 // sink back in depth toward the edges, and a sheen sweeps across the glass as they pass.
 function updateCards3d(narrow) {
@@ -406,14 +494,19 @@ function updateCards3d(narrow) {
     const e = 1 - c.in; // entrance remainder
     const focus = Math.max(0, 1 - a); // the card nearest the centre reacts most to the pointer
     const float = reduceMotion ? 0 : Math.sin(now * 1.3 + i * 0.9) * 4 * c.in;
-    const ry = -n * maxY + e * 34 + pointer.sx * 9 * focus;
+    // cards fold away steeply as they reach the screen edges, like pages of a book
+    const fold = Math.min(1, Math.max(0, (a - 0.78) / 0.6));
+    const foldE = fold * fold * (3 - 2 * fold);
+    const ry = -n * maxY + e * 34 + pointer.sx * 9 * focus - Math.sign(n) * foldE * 42;
     const rx = e * -26 - pointer.sy * 7 * focus;
-    const tz = -Math.pow(a, 1.4) * depth - e * 160 + focus * 26;
+    const tz = -Math.pow(a, 1.4) * depth - e * 160 + focus * 26 - foldE * 110;
     const ty = e * 90 + a * a * 10 + float;
     c.el.style.transform = `perspective(1100px) translate3d(0, ${ty.toFixed(1)}px, ${tz.toFixed(1)}px) rotateY(${ry.toFixed(2)}deg) rotateX(${rx.toFixed(2)}deg)`;
     c.el.style.setProperty('--sheen', `${(50 - n * 70 - pointer.sx * 18 * focus).toFixed(1)}%`);
     c.el.style.setProperty('--rim', (focus * focus * c.in).toFixed(3));
-    c.el.style.setProperty('--shade', (Math.min(1, a) * 0.42 + e * 0.3).toFixed(3));
+    c.el.style.setProperty('--shade', (Math.min(1, a) * 0.42 + e * 0.3 + foldE * 0.25).toFixed(3));
+    c.el.style.setProperty('--foil', `${(50 + n * 80 + pointer.sx * 30 * focus).toFixed(1)}%`);
+    c.el.style.setProperty('--foilA', (0.25 + focus * 0.55).toFixed(3));
   }
 }
 
@@ -491,6 +584,7 @@ function frame() {
   // ---- DOM sync (screen positions projected from the scene)
   toScreen(tmp2.set(P.x, 0, P.z + ROAD * Math.cos(P.h)), scr);
   root.style.setProperty('--road-top', `${scr.y.toFixed(1)}px`);
+  roadTopPx = scr.y;
   toScreen(tmp2.set(V_X - ROAD, 0, Math.max(P.z, RADIUS)), scr);
   toScreen(tmp2.set(V_X + ROAD, 0, Math.max(P.z, RADIUS)), scr2);
   root.style.setProperty('--road-l', `${Math.min(scr.x, scr2.x).toFixed(1)}px`);
@@ -517,6 +611,7 @@ function frame() {
   const ang = Math.atan2(scr2.y - scr.y, scr2.x - scr.x) / DEG;
   el.needle.style.transform = `rotate(${ang.toFixed(1)}deg)`;
 
+  updateCarPhoto();
   updateCards3d(narrow);
   updateScrollFx(dt);
   updateHud(tl ? tl.time() : 0, speed);
@@ -527,6 +622,7 @@ function frame() {
   if (renderer && keyNow !== lastKey) {
     lastKey = keyNow;
     renderer.render(scene, camera);
+    updateReflection();
   }
 }
 
@@ -649,7 +745,7 @@ function buildTimeline(L) {
   };
 
   // 01 hero leaves as the mat rises
-  t.to('.s1 .brand, .s1 .display', { autoAlpha: 0, y: -60, duration: 0.35, ease: 'power1.in' }, 0.42)
+  t.to('.s1 .hero-card', { autoAlpha: 0, y: -60, duration: 0.35, ease: 'power1.in' }, 0.42)
     .to('.s1-foot', { autoAlpha: 0, duration: 0.25 }, 0.3);
   // ghost type crosses behind the vehicle
   t.fromTo('#ghost', { autoAlpha: 0, x: () => window.innerWidth * 0.35 }, { autoAlpha: 1, duration: 0.3 }, 0.55)
@@ -681,6 +777,13 @@ function buildTimeline(L) {
   t.fromTo('#ghost2', { autoAlpha: 0, x: () => window.innerWidth * 0.5 }, { autoAlpha: 1, duration: 0.3 }, 5.1)
     .to('#ghost2', { x: () => -($('#ghost2').offsetWidth - window.innerWidth * 0.25), duration: 2.8 }, 5.1)
     .to('#ghost2', { autoAlpha: 0, duration: 0.3 }, 7.6);
+  // night campus: the car drives past an IT campus gate from the end of the platform rail to the crane-up
+  if (false) t.fromTo(['#campus', '#wet'], { autoAlpha: 0 }, { autoAlpha: 1, duration: 0.45, ease: 'power1.inOut' }, 7.5)
+    .to(['#campus', '#wet'], { autoAlpha: 0, duration: 0.35, ease: 'power1.in' }, 10.95);
+  // slow pans across each photo, and the airport-road photo takes over for the run to the crane-up
+  t.fromTo('#campusCity', { xPercent: 3 }, { xPercent: -3, duration: 3.6 }, 7.5)
+    .fromTo('#campusAirport', { autoAlpha: 0 }, { autoAlpha: 1, duration: 0.5, ease: 'power1.inOut' }, 9.15)
+    .fromTo('#campusAirport', { xPercent: 3 }, { xPercent: -3, duration: 1.9 }, 9.15);
   reveal('.s5', 8.0, 8.92);
   t.fromTo('.s5 .sectors span, .s5 .sectors i', { autoAlpha: 0, y: 40, skewY: 4 }, { autoAlpha: 1, y: 0, skewY: 0, duration: 0.28, stagger: 0.05, ease: 'power3.out' }, 8.02);
   // 07 · workflow: the gold line draws across and each node lights as the line reaches it
@@ -701,6 +804,7 @@ function buildTimeline(L) {
   t.fromTo('.s8 .feat li', { autoAlpha: 0, x: -16 }, { autoAlpha: 1, x: 0, duration: 0.2, stagger: 0.05, ease: 'power2.out' }, 14.1);
   reveal('.s9', 14.95, 15.85);
   t.fromTo('.s9 .svc', { rotateY: -72, z: -120, transformPerspective: 1000, transformOrigin: '0% 50%' }, { rotateY: 0, z: 0, duration: 0.4, stagger: 0.12, ease: 'power3.out' }, 14.95)
+    .fromTo('.s9 .svc-in', { rotateY: 0 }, { rotateY: 180, duration: 0.32, stagger: 0.1, ease: 'power2.inOut' }, 15.32)
     .to('.s9 .svc', { rotateY: 60, transformOrigin: '100% 50%', duration: 0.2, stagger: 0.04, ease: 'power2.in' }, 15.85);
   reveal('.s9b', 15.95, 16.9);
   t.fromTo('.roles li', { autoAlpha: 0, scale: 0.8, y: 10 }, { autoAlpha: 1, scale: 1, y: 0, duration: 0.18, stagger: 0.04, ease: 'back.out(2)' }, 16.08);
@@ -713,7 +817,8 @@ function buildTimeline(L) {
   show('#shot', STUDY + 0.05, null);
   reveal('.c1', STUDY + 0.2, STUDY + 0.9);
   reveal('.c2', STUDY + 1.1, STUDY + 1.88);
-  t.fromTo('.checks li', { autoAlpha: 0, x: -18 }, { autoAlpha: 1, x: 0, duration: 0.2, stagger: 0.08, ease: 'power2.out' }, STUDY + 1.2);
+  // inspection checks deal in like cards: they swing down from above in 3D
+  t.fromTo('.checks li', { autoAlpha: 0, rotateX: -80, y: 18, z: -60, transformPerspective: 700, transformOrigin: '50% 0%' }, { autoAlpha: 1, rotateX: 0, y: 0, z: 0, duration: 0.28, stagger: 0.09, ease: 'back.out(1.6)' }, STUDY + 1.2);
   reveal('.c3', STUDY + 2.15, STUDY + 2.9);
   reveal('.c4', STUDY + 3.05, STUDY + 3.5);
   reveal('.c5', STUDY + 3.62, null);
@@ -735,8 +840,10 @@ const EDITIONS = {
 const paintTarget = new THREE.Color();
 function setEdition(id, animate = true) {
   const ed = EDITIONS[id] || EDITIONS.pearl;
+  currentEdition = EDITIONS[id] ? id : 'pearl';
   paintTarget.setHex(ed.hex);
-  const targets = [vehicle.uniforms.uBody.value, vehicle.materials.paint.color];
+  const vs = Object.values(fleet);
+  const targets = vs.flatMap((v) => [v.uniforms.uBody.value, v.materials.paint.color]);
   gsap.to(targets, {
     r: paintTarget.r, g: paintTarget.g, b: paintTarget.b,
     duration: animate && !reduceMotion ? 0.9 : 0,
@@ -745,21 +852,59 @@ function setEdition(id, animate = true) {
     onUpdate: () => { lastKey = ''; },
     onComplete: () => { lastKey = ''; },
   });
-  gsap.to([vehicle.materials.body, vehicle.materials.paint], {
+  gsap.to(vs.flatMap((v) => [v.materials.body, v.materials.paint]), {
     envMapIntensity: ed.env,
     duration: animate && !reduceMotion ? 0.9 : 0,
     ease: 'power2.inOut',
     overwrite: true,
   });
-  $('#edName').textContent = ed.name;
-  $$('#editions button').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.ed === id)));
+  $$('.ed-swatches button').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.ed === id)));
   try { localStorage.setItem('cniq-edition', id); } catch (err) { /* storage unavailable */ }
 }
-$$('#editions button').forEach((b) => b.addEventListener('click', () => setEdition(b.dataset.ed)));
+$$('.ed-swatches button').forEach((b) => b.addEventListener('click', () => setEdition(b.dataset.ed)));
+
+// vehicle switch: the new vehicle takes the old one's place with a short settle
+function setVehicle(type, animate = true) {
+  const next = fleet[type] || fleet.mpv;
+  if (next !== vehicle) {
+    vehicle.group.visible = false;
+    vehicle = next;
+    vehicle.group.visible = true;
+    if (animate && !reduceMotion) {
+      gsap.fromTo(vehicle.group.scale, { x: 0.94, y: 0.94, z: 0.94 }, {
+        x: 1, y: 1, z: 1, duration: 0.7, ease: 'back.out(1.8)', overwrite: true,
+        onUpdate: () => { lastKey = ''; },
+      });
+    }
+    lastKey = '';
+  }
+  $$('.ed-type button').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.type === type)));
+  try { localStorage.setItem('cniq-vehicle', type); } catch (err) { /* storage unavailable */ }
+}
+$$('.ed-type button').forEach((b) => b.addEventListener('click', () => setVehicle(b.dataset.type)));
+
+// theme toggle: dark by default; the choice is remembered per viewer
+const themeBtn = $('#themeToggle');
+function syncThemeButton() {
+  const dark = root.getAttribute('data-theme') !== 'light';
+  themeBtn.setAttribute('aria-label', dark ? 'Switch to light theme' : 'Switch to dark theme');
+  document.querySelector('meta[name="theme-color"]').setAttribute('content', dark ? '#0a0b0d' : '#f5f5f3');
+}
+themeBtn.addEventListener('click', () => {
+  const next = root.getAttribute('data-theme') === 'light' ? 'dark' : 'light';
+  root.setAttribute('data-theme', next);
+  try { localStorage.setItem('cniq-theme', next); } catch (err) { /* storage unavailable */ }
+  syncThemeButton();
+});
+syncThemeButton();
+let savedVehicle = 'mpv';
+try { savedVehicle = localStorage.getItem('cniq-vehicle') || 'mpv'; } catch (err) { /* storage unavailable */ }
+const urlVehicle = params.get('vehicle');
+setVehicle('suv', false); // one vehicle: the electric SUV
 let savedEdition = 'pearl';
 try { savedEdition = localStorage.getItem('cniq-edition') || 'pearl'; } catch (err) { /* storage unavailable */ }
 const urlEdition = params.get('edition');
-setEdition(EDITIONS[urlEdition] ? urlEdition : savedEdition, false);
+setEdition('pearl', false); // one colour: Pearl White
 
 // ---------------------------------------------------------------- boot
 // split every title into masked words (keeps <br>, .dim and .iq spans intact)
@@ -795,6 +940,10 @@ $$('.card').forEach((card) => {
   sheen.className = 'sheen';
   sheen.setAttribute('aria-hidden', 'true');
   card.appendChild(sheen);
+  const foil = document.createElement('i');
+  foil.className = 'foil';
+  foil.setAttribute('aria-hidden', 'true');
+  card.appendChild(foil);
 });
 $$('.card svg *, .svc svg *, .panel svg *').forEach((shape) => {
   if (shape.tagName === 'g') return;
@@ -830,8 +979,10 @@ if (!reduceMotion) {
 // debug hook for automated checks: window.__cniq.seek(timelineSeconds)
 window.__cniq = {
   rig,
-  vehicle,
+  get vehicle() { return vehicle; },
+  fleet,
   setEdition,
+  setVehicle,
   get timeline() { return tl; },
   seek(time, smooth = false) {
     const st = tl && tl.scrollTrigger;
