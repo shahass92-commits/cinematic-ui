@@ -779,8 +779,7 @@ body {
     linear-gradient(to bottom, rgba(255, 255, 255, 0.045) 1px, transparent 1px);
 }
 /* studio upper field: the studio photo (near-black wall with a faint blue grid, charcoal floor) plus a vignette */
-:root[data-theme="dark"] .paper { background: #05070c url("assets/studio.jpg") center 100% / cover no-repeat; }
-:root[data-theme="dark"] .grid { display: none; }
+:root[data-theme="dark"] .paper { background: linear-gradient(180deg, #05070c 0%, #0a0e18 100%); }
 :root[data-theme="dark"] .paper::after {
   content: "";
   position: absolute;

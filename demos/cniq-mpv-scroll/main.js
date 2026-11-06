@@ -778,7 +778,7 @@ function buildTimeline(L) {
     .to('#ghost2', { x: () => -($('#ghost2').offsetWidth - window.innerWidth * 0.25), duration: 2.8 }, 5.1)
     .to('#ghost2', { autoAlpha: 0, duration: 0.3 }, 7.6);
   // night campus: the car drives past an IT campus gate from the end of the platform rail to the crane-up
-  t.fromTo(['#campus', '#wet'], { autoAlpha: 0 }, { autoAlpha: 1, duration: 0.45, ease: 'power1.inOut' }, 7.5)
+  if (false) t.fromTo(['#campus', '#wet'], { autoAlpha: 0 }, { autoAlpha: 1, duration: 0.45, ease: 'power1.inOut' }, 7.5)
     .to(['#campus', '#wet'], { autoAlpha: 0, duration: 0.35, ease: 'power1.in' }, 10.95);
   // slow pans across each photo, and the airport-road photo takes over for the run to the crane-up
   t.fromTo('#campusCity', { xPercent: 3 }, { xPercent: -3, duration: 3.6 }, 7.5)
