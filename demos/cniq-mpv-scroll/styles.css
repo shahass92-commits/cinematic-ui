@@ -748,6 +748,46 @@ body {
     linear-gradient(to right, rgba(255, 255, 255, 0.045) 1px, transparent 1px),
     linear-gradient(to bottom, rgba(255, 255, 255, 0.045) 1px, transparent 1px);
 }
+/* studio upper field: near-black blue gradient, a faint blue grid fading toward the floor, and a vignette */
+:root[data-theme="dark"] .paper { background: linear-gradient(180deg, #05070c 0%, #0a0e18 100%); }
+:root[data-theme="dark"] .paper::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(to right, rgba(111, 134, 255, 0.05) 1px, transparent 1px) 0 0 / 56px 56px,
+    linear-gradient(to bottom, rgba(111, 134, 255, 0.05) 1px, transparent 1px) 0 0 / 56px 56px;
+  -webkit-mask-image: linear-gradient(180deg, #000 0%, rgba(0, 0, 0, 0.6) 55%, transparent 85%);
+  mask-image: linear-gradient(180deg, #000 0%, rgba(0, 0, 0, 0.6) 55%, transparent 85%);
+  box-shadow: inset 0 0 220px 60px rgba(0, 0, 0, 0.65);
+}
+.horizon {
+  position: fixed;
+  left: 0;
+  right: 0;
+  top: calc(var(--road-top) - 140px);
+  height: 160px;
+  z-index: 1;
+  pointer-events: none;
+  background: radial-gradient(60% 100% at 50% 100%, rgba(150, 168, 255, 0.10), transparent 70%);
+  opacity: 0;
+}
+:root[data-theme="dark"] .horizon { opacity: 1; }
+.reflect {
+  position: fixed;
+  left: 0;
+  top: var(--road-top);
+  width: 100vw;
+  height: 0;
+  z-index: 2;
+  pointer-events: none;
+  filter: blur(5px);
+  opacity: 0;
+  transition: opacity 0.4s ease;
+  -webkit-mask-image: linear-gradient(180deg, rgba(0, 0, 0, 0.85), transparent 80%);
+  mask-image: linear-gradient(180deg, rgba(0, 0, 0, 0.85), transparent 80%);
+}
+
 :root[data-theme="dark"] .paper::before {
   content: "";
   position: absolute;

@@ -51,7 +51,13 @@
     <i class="layer near" id="campusNear"></i>
   </div>
 
+  <!-- studio horizon: a soft glow where the floor meets the upper field -->
+  <div class="horizon" aria-hidden="true"></div>
+
   <canvas id="stage" aria-hidden="true"></canvas>
+
+  <!-- floor reflection: a blurred, mirrored copy of the car, redrawn from the 3D scene -->
+  <canvas class="reflect" id="reflect" aria-hidden="true"></canvas>
 
   <!-- wet-road reflections of the campus lights, laid over the road -->
   <div class="wet" id="wet" aria-hidden="true"><i id="wetMid"></i></div>

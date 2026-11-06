@@ -242,6 +242,25 @@ let lastTime = performance.now();
 let speed = 0;
 let tl = null;
 let lastKey = '';
+// floor reflection: copied from the WebGL canvas right after each render, flipped and blurred by CSS
+const reflect = document.getElementById('reflect');
+const rctx = reflect.getContext('2d');
+let roadTopPx = 0;
+function updateReflection() {
+  const side = Math.max(0, 1 - rig.elev / 6); // only while the camera is at side elevation
+  if (side < 0.02 || roadTopPx <= 0) { reflect.style.opacity = '0'; return; }
+  const dpr = renderer.getPixelRatio();
+  const h = Math.min(roadTopPx, H * 0.32); // the band above the road that holds the car
+  const dw = Math.max(1, Math.round(W / 2));
+  const dh = Math.max(1, Math.round(h / 2));
+  if (reflect.width !== dw || reflect.height !== dh) { reflect.width = dw; reflect.height = dh; }
+  reflect.style.height = `${h.toFixed(1)}px`;
+  rctx.setTransform(1, 0, 0, -1, 0, dh); // mirror vertically: the wheels meet their reflection at the road line
+  rctx.clearRect(0, 0, dw, dh);
+  rctx.drawImage(renderer.domElement, 0, Math.max(0, (roadTopPx - h) * dpr), W * dpr, h * dpr, 0, 0, dw, dh);
+  rctx.setTransform(1, 0, 0, 1, 0, 0);
+  reflect.style.opacity = (0.3 * side).toFixed(3);
+}
 // 3D rail cards: GSAP tweens `in` (entrance 0..1); frame() composes the full transform every tick
 let railCards = [];
 // scroll velocity drives a gentle skew on the moving type and rails; it decays when scrolling stops
@@ -635,6 +654,7 @@ function frame() {
   // ---- DOM sync (screen positions projected from the scene)
   toScreen(tmp2.set(P.x, 0, P.z + ROAD * Math.cos(P.h)), scr);
   root.style.setProperty('--road-top', `${scr.y.toFixed(1)}px`);
+  roadTopPx = scr.y;
   toScreen(tmp2.set(V_X - ROAD, 0, Math.max(P.z, RADIUS)), scr);
   toScreen(tmp2.set(V_X + ROAD, 0, Math.max(P.z, RADIUS)), scr2);
   root.style.setProperty('--road-l', `${Math.min(scr.x, scr2.x).toFixed(1)}px`);
@@ -672,6 +692,7 @@ function frame() {
   if (renderer && keyNow !== lastKey) {
     lastKey = keyNow;
     renderer.render(scene, camera);
+    updateReflection();
   }
 }
 
